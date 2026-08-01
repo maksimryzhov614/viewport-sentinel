@@ -19,4 +19,8 @@ export default tseslint.config(
     ...tseslint.configs.disableTypeChecked,
     files: ['eslint.config.mjs'],
   },
+  {
+    ...tseslint.configs.disableTypeChecked,
+    files: ['scripts/**/*.mjs'],
+  },
 );

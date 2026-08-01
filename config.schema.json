@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "baseUrl": {
+      "type": "string",
+      "minLength": 1,
+      "format": "uri",
+      "pattern": "^[Hh][Tt][Tt][Pp][Ss]?:"
+    },
+    "pages": {
+      "minItems": 1,
+      "maxItems": 50,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+          },
+          "url": {
+            "type": "string",
+            "minLength": 1,
+            "format": "uri",
+            "pattern": "^[Hh][Tt][Tt][Pp][Ss]?:"
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^\\/.*"
+          },
+          "readySelector": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "consoleIgnore": {
+            "default": [],
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            }
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "url"
+            ],
+            "not": {
+              "required": [
+                "path"
+              ]
+            }
+          },
+          {
+            "required": [
+              "path"
+            ],
+            "not": {
+              "required": [
+                "url"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "viewports": {
+      "minItems": 1,
+      "maxItems": 12,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "deviceScaleFactor": {
+            "default": 1,
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 4
+          }
+        },
+        "required": [
+          "name",
+          "width",
+          "height"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "timeoutMs": {
+      "default": 10000,
+      "type": "integer",
+      "minimum": 1000,
+      "maximum": 60000
+    },
+    "output": {
+      "default": {
+        "dir": "artifacts/viewport-sentinel",
+        "formats": [
+          "json",
+          "sarif"
+        ]
+      },
+      "type": "object",
+      "properties": {
+        "dir": {
+          "default": "artifacts/viewport-sentinel",
+          "type": "string",
+          "minLength": 1
+        },
+        "formats": {
+          "default": [
+            "json",
+            "sarif"
+          ],
+          "minItems": 1,
+          "maxItems": 2,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "json",
+              "sarif"
+            ]
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "version",
+    "pages",
+    "viewports"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "pages": {
+            "contains": {
+              "required": [
+                "path"
+              ]
+            }
+          }
+        },
+        "required": [
+          "pages"
+        ]
+      },
+      "then": {
+        "required": [
+          "baseUrl"
+        ]
+      }
+    }
+  ],
+  "$id": "https://github.com/maksimryzhov614/viewport-sentinel/config.schema.json"
+}
