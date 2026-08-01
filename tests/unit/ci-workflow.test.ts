@@ -55,6 +55,7 @@ function yamlValue(node: YamlNode): unknown {
     case 'plain':
     case 'quoteDouble':
     case 'quoteSingle':
+    case 'blockLiteral':
       return node.value;
     default:
       throw new Error(`Unsupported YAML node: ${node.type}`);
@@ -107,7 +108,7 @@ function containsKey(value: unknown, key: string): boolean {
 }
 
 describe('CI workflow', () => {
-  it('parses into the exact least-privilege trigger and two-job gate', async () => {
+  it('parses into the exact least-privilege trigger and local self-consumer gate', async () => {
     const workflow = await parseWorkflow();
 
     expect(workflow.on).toEqual({
@@ -118,7 +119,11 @@ describe('CI workflow', () => {
     expect(workflow).not.toHaveProperty('env');
 
     const jobs = object(workflow.jobs);
-    expect(Object.keys(jobs)).toEqual(['compatibility', 'browser']);
+    expect(Object.keys(jobs)).toEqual([
+      'compatibility',
+      'browser',
+      'self-consumer',
+    ]);
     const compatibility = object(jobs.compatibility);
     expect(compatibility.strategy).toEqual({
       matrix: { 'node-version': ['22', '24', '26'] },
@@ -161,5 +166,31 @@ describe('CI workflow', () => {
       },
     ]);
     expect(containsKey(workflow, 'env')).toBe(false);
+
+    const selfConsumer = object(jobs['self-consumer']);
+    expect(steps(selfConsumer)).toEqual([
+      { uses: 'actions/checkout@v6' },
+      {
+        uses: 'actions/setup-node@v6',
+        with: { 'node-version': '24' },
+      },
+      { run: 'npm ci' },
+      { run: 'npm run build' },
+      {
+        name: 'Start fixture and wait for readiness',
+        run:
+          'npm run fixture > /tmp/viewport-sentinel-fixture.log 2>&1 &\n' +
+          'for attempt in {1..30}; do\n  curl --fail --silent http://127.0.0.1:4173/clean >/dev/null && exit 0\n  sleep 1\ndone\n' +
+          'cat /tmp/viewport-sentinel-fixture.log\nexit 1\n',
+      },
+      {
+        name: 'Consume the local Action',
+        uses: './',
+        with: {
+          config: 'tests/fixtures/config/clean.json',
+          output: 'artifacts/self-consumer',
+        },
+      },
+    ]);
   });
 });

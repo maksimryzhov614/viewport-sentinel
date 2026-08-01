@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]*.[0-9]*.[0-9]*'
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Assert exact release tag
+        shell: bash
+        run: |
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || [[ "$TAG_VERSION" != "$PACKAGE_VERSION" ]]; then
+            echo "Release tag must be exact semver and match package.json" >&2
+            exit 1
+          fi
+      - name: Verify release candidate
+        run: npm run verify
+      - name: Verify 20-run determinism
+        run: npm run verify:determinism -- 20
+      - name: Verify performance
+        run: npm run verify:performance
+      - name: Publish first release with provenance
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_INITIAL_PUBLISH_TOKEN }}
+      - name: Create GitHub release from changelog
+        run: gh release create "$GITHUB_REF_NAME" --title "Viewport Sentinel $GITHUB_REF_NAME" --notes-file CHANGELOG.md
+        env:
+          GH_TOKEN: ${{ github.token }}

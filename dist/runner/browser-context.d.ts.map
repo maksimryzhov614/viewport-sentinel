@@ -1,0 +1,1 @@
+{"version":3,"file":"browser-context.d.ts","sourceRoot":"","sources":["../../src/runner/browser-context.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,OAAO,EAAE,cAAc,EAAE,MAAM,YAAY,CAAC;AAC1D,OAAO,KAAK,EAAE,YAAY,EAAE,MAAM,mBAAmB,CAAC;AAEtD,wBAAgB,kBAAkB,CAChC,OAAO,EAAE,OAAO,EAChB,QAAQ,EAAE,YAAY,GACrB,OAAO,CAAC,cAAc,CAAC,CAUzB"}

@@ -1,0 +1,1 @@
+{"version":3,"file":"server.d.ts","sourceRoot":"","sources":["../../src/fixtures/server.ts"],"names":[],"mappings":"AAaA,MAAM,WAAW,aAAa;IAC5B,QAAQ,CAAC,GAAG,EAAE,MAAM,CAAC;IACrB,KAAK,IAAI,OAAO,CAAC,IAAI,CAAC,CAAC;CACxB;AAUD,wBAAsB,kBAAkB,CAAC,IAAI,SAAO,GAAG,OAAO,CAAC,aAAa,CAAC,CAqE5E"}

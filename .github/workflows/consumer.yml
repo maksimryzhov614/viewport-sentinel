@@ -1,0 +1,28 @@
+name: Published Action consumer
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  consumer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Start fixture and wait for readiness
+        run: |
+          npm ci
+          npm run fixture > /tmp/viewport-sentinel-fixture.log 2>&1 &
+          for attempt in {1..30}; do
+            curl --fail --silent http://127.0.0.1:4173/clean >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/viewport-sentinel-fixture.log
+          exit 1
+      - name: Consume viewport-sentinel@v1
+        uses: maksimryzhov614/viewport-sentinel@v1
+        with:
+          config: tests/fixtures/config/clean.json
+          output: artifacts/consumer

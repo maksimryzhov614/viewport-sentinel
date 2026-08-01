@@ -1,0 +1,48 @@
+name: Bug report
+description: Report reproducible incorrect Viewport Sentinel behavior
+title: '[Bug]: '
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Do not paste secrets, signed URLs, customer data, or private reports.
+        Use a minimal public reproduction and sanitize the config first.
+  - type: input
+    id: versions
+    attributes:
+      label: Tool, Playwright, and Chromium versions
+      description: Copy versions from a sanitized JSON report.
+      placeholder: viewport-sentinel 0.1.0; Playwright 1.62.1; Chromium ...
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Sanitized configuration
+      description: Remove credentials, query strings, signed URLs, and private hosts.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected rule result
+      description: Name VS001, VS002, VS003, VS004, or VSRUN001 and the expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual rule result
+      description: Include sanitized output and the exit code.
+    validations:
+      required: true
+  - type: input
+    id: reproduction
+    attributes:
+      label: Minimal public reproduction
+      description: Link to a public repository or page with no sensitive data.
+    validations:
+      required: true

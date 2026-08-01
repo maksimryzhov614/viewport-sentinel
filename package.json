@@ -1,7 +1,15 @@
 {
   "name": "viewport-sentinel",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Deterministic responsive and media regression checks in Chromium CI.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maksimryzhov614/viewport-sentinel.git"
+  },
+  "homepage": "https://github.com/maksimryzhov614/viewport-sentinel#readme",
+  "bugs": {
+    "url": "https://github.com/maksimryzhov614/viewport-sentinel/issues"
+  },
   "type": "module",
   "license": "MIT",
   "engines": {
@@ -17,7 +25,18 @@
     }
   },
   "files": [
-    "dist",
+    "dist/action",
+    "dist/cli",
+    "dist/config",
+    "dist/core",
+    "dist/model",
+    "dist/reporters",
+    "dist/rules",
+    "dist/runner",
+    "dist/cli.js",
+    "dist/cli.js.map",
+    "dist/cli.d.ts",
+    "dist/cli.d.ts.map",
     "config.schema.json",
     "action.yml",
     "README.md",

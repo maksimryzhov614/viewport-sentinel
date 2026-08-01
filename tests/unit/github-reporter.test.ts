@@ -27,7 +27,7 @@ function emptyAuditResult(): AuditResult {
   return {
     schemaVersion: 1,
     complete: true,
-    tool: { name: 'viewport-sentinel', version: '0.0.0' },
+    tool: { name: 'viewport-sentinel', version: '0.1.0' },
     browser: {
       name: 'chromium',
       playwrightVersion: '1.62.1',

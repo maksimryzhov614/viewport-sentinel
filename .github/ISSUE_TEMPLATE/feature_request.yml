@@ -1,0 +1,31 @@
+name: Feature request
+description: Propose a focused addition to the explicit Chromium audit matrix
+title: '[Feature]: '
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Do not include secrets, signed URLs, customer data, or private assets.
+        Viewport Sentinel deliberately is not a crawler, Lighthouse, pixel-diff,
+        Axe, authentication, custom-script, database, or hosted service.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe the concrete regression that the current rules miss.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Proposed deterministic behavior
+      description: Define inputs, observable output, thresholds, caps, and exit behavior.
+    validations:
+      required: true
+  - type: input
+    id: reproduction
+    attributes:
+      label: Minimal public example
+      description: Link to a public, non-sensitive reproduction if available.
