@@ -1,0 +1,55 @@
+name: Viewport Sentinel
+description: Deterministic responsive and media regression checks in Chromium
+inputs:
+  config:
+    description: Path to viewport-sentinel.config.json
+    required: true
+  output:
+    description: Optional report-directory override
+    required: false
+outputs:
+  finding-count:
+    description: Number of emitted findings
+    value: ${{ steps.audit.outputs.finding-count }}
+  report-json:
+    description: Path to results.json
+    value: ${{ steps.audit.outputs.report-json }}
+  report-sarif:
+    description: Path to results.sarif
+    value: ${{ steps.audit.outputs.report-sarif }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v6
+      with:
+        node-version: 24
+        package-manager-cache: false
+    - name: Install action runtime
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: npm ci --omit=dev --ignore-scripts
+    - name: Install matching Chromium
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: npx --no-install playwright install --with-deps chromium
+    - id: audit
+      name: Audit viewports
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      env:
+        INPUT_CONFIG: ${{ inputs.config }}
+        INPUT_OUTPUT: ${{ inputs.output }}
+      run: node "$GITHUB_ACTION_PATH/dist/action/run.js"
+    - name: Upload reports
+      if: ${{ always() && steps.audit.outputs.output-dir != '' }}
+      uses: actions/upload-artifact@v5
+      with:
+        name: viewport-sentinel-${{ github.run_id }}-${{ github.run_attempt }}
+        path: ${{ steps.audit.outputs.output-dir }}
+        if-no-files-found: ignore
+    - name: Propagate audit status
+      if: ${{ always() }}
+      shell: bash
+      env:
+        VIEWPORT_SENTINEL_EXIT_CODE: ${{ steps.audit.outputs.exit-code }}
+      run: node "$GITHUB_ACTION_PATH/dist/action/exit.js" "$VIEWPORT_SENTINEL_EXIT_CODE"

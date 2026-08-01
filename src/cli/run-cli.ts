@@ -1,6 +1,6 @@
 import { access } from 'node:fs/promises';
 import { createRequire } from 'node:module';
-import { basename, resolve } from 'node:path';
+import { basename, isAbsolute, relative, resolve, sep } from 'node:path';
 import { ConfigError, loadConfig } from '../config/load-config.js';
 import { normalizeMessage } from '../core/privacy.js';
 import type {
@@ -9,6 +9,7 @@ import type {
   CliRunResult,
   NormalizedConfig,
 } from '../model/types.js';
+import { writeGitHubReport } from '../reporters/github.js';
 import { writeJsonReport } from '../reporters/json.js';
 import { writeSarifReport } from '../reporters/sarif.js';
 import { writeTerminalSummary } from '../reporters/terminal.js';
@@ -37,6 +38,7 @@ export interface RunCliDependencies {
   auditConfig: typeof auditConfig;
   writeJsonReport: typeof writeJsonReport;
   writeSarifReport: typeof writeSarifReport;
+  writeGitHubReport: typeof writeGitHubReport;
   writeTerminalSummary: typeof writeTerminalSummary;
 }
 
@@ -45,6 +47,7 @@ export const defaultRunCliDependencies: RunCliDependencies = Object.freeze({
   auditConfig,
   writeJsonReport,
   writeSarifReport,
+  writeGitHubReport,
   writeTerminalSummary,
 });
 
@@ -105,6 +108,19 @@ async function writeConfiguredReports(
   }
 
   return firstError;
+}
+
+function relativeConfigPath(cwd: string, configPath: string): string {
+  const path = relative(cwd, configPath);
+  if (
+    path === '' ||
+    path === '..' ||
+    path.startsWith(`..${sep}`) ||
+    isAbsolute(path)
+  ) {
+    return basename(configPath);
+  }
+  return path;
 }
 
 function errorLine(error: unknown): string {
@@ -190,6 +206,22 @@ export async function runCli(
     );
     if (reportError !== undefined) {
       throw reportError;
+    }
+
+    if (parsed.github) {
+      try {
+        await dependencies.writeGitHubReport(
+          auditResult,
+          relativeConfigPath(environment.cwd, config.configPath),
+          environment.env,
+        );
+      } catch {
+        throw new AuditExecutionError(
+          incompleteResult(auditResult),
+          'Audit GitHub report writing failed',
+          'GitHub reporter failed',
+        );
+      }
     }
 
     dependencies.writeTerminalSummary(auditResult, environment.stdout);
