@@ -14,8 +14,19 @@ function setOutputs(result: CliRunResult): void {
   core.setOutput('report-sarif', result.sarifPath ?? '');
 }
 
+function annotateWrapperFailure(): void {
+  try {
+    core.error(
+      'Viewport Sentinel Action failed unexpectedly; saved outputs indicate an internal failure.',
+    );
+  } catch {
+    // Annotation output is best-effort when the process output channel is broken.
+  }
+}
+
 async function main(): Promise<void> {
   let result = failureResult();
+  let wrapperFailed = false;
 
   try {
     const inputConfig = core.getInput('config', { required: true });
@@ -27,13 +38,24 @@ async function main(): Promise<void> {
       '--github',
     ]);
   } catch {
-    core.error(
-      'Viewport Sentinel Action failed unexpectedly; saved outputs indicate an internal failure.',
-    );
+    wrapperFailed = true;
   }
 
-  setOutputs(result);
-  process.exitCode = 0;
+  try {
+    setOutputs(result);
+  } catch {
+    wrapperFailed = true;
+    try {
+      setOutputs(failureResult());
+    } catch {
+      // A broken GITHUB_OUTPUT channel cannot persist even the safe fallback.
+    }
+  } finally {
+    if (wrapperFailed) {
+      annotateWrapperFailure();
+    }
+    process.exitCode = 0;
+  }
 }
 
 await main();

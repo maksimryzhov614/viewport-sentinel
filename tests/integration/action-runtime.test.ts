@@ -325,6 +325,32 @@ describe('compiled Action runtime', () => {
     });
   });
 
+  it('keeps process exit zero and emits one safe annotation when GITHUB_OUTPUT is invalid', async () => {
+    const { configPath, outputDir, cwd } = await fixtureConfig('clean');
+    const { summaryPath } = await githubFiles(cwd);
+
+    const audit = await spawnNode(runActionPath, [], cwd, {
+      INPUT_CONFIG: configPath,
+      INPUT_OUTPUT: outputDir,
+      GITHUB_OUTPUT: cwd,
+      GITHUB_STEP_SUMMARY: summaryPath,
+    });
+
+    expect(audit.code).toBe(0);
+    expect(audit.stderr).toBe('');
+    expect(audit.stdout.match(/::error/gu)).toHaveLength(1);
+    expect(audit.stdout).toContain(
+      'Viewport Sentinel Action failed unexpectedly',
+    );
+    expect(audit.stdout).not.toMatch(/EISDIR|github-output|top-secret/gu);
+    expect((await stat(join(outputDir, 'results.json'))).isFile()).toBe(true);
+    expect((await stat(join(outputDir, 'results.sarif'))).isFile()).toBe(true);
+    expect(await readFile(summaryPath, 'utf8')).toContain(
+      'No findings detected',
+    );
+    await expect(readFile(cwd, 'utf8')).rejects.toThrow();
+  }, 60_000);
+
   it('uses literal argument-array inputs and never executes invalid input text', async () => {
     const cwd = await temporaryDirectory('input-injection');
     const { outputPath } = await githubFiles(cwd);

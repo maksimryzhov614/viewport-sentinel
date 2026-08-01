@@ -2,7 +2,7 @@ import * as core from '@actions/core';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   defaultRunCliDependencies,
   runCli,
@@ -18,7 +18,6 @@ import type {
 import { writeGitHubReport } from '../../src/reporters/github.js';
 
 const temporaryDirectories: string[] = [];
-let previousSummaryPath: string | undefined;
 
 interface TestGitHubEnvironment extends NodeJS.ProcessEnv {
   summaryPath: string;
@@ -120,7 +119,6 @@ async function githubEnvironment(
   const directory = await temporaryDirectory(label);
   const summaryPath = join(directory, 'summary.md');
   await writeFile(summaryPath, '', 'utf8');
-  process.env.GITHUB_STEP_SUMMARY = summaryPath;
   return { GITHUB_STEP_SUMMARY: summaryPath, summaryPath };
 }
 
@@ -140,11 +138,6 @@ async function captureWorkflowCommands(
     write.mockRestore();
   }
   return output;
-}
-
-function resetCoreSummary(): void {
-  core.summary.emptyBuffer();
-  Reflect.deleteProperty(core.summary, '_filePath');
 }
 
 function memorySink(): { sink: TextSink; text(): string } {
@@ -175,20 +168,8 @@ function normalizedConfig(
   };
 }
 
-beforeEach(() => {
-  previousSummaryPath = process.env.GITHUB_STEP_SUMMARY;
-  delete process.env.GITHUB_STEP_SUMMARY;
-  resetCoreSummary();
-});
-
 afterEach(async () => {
   vi.restoreAllMocks();
-  resetCoreSummary();
-  if (previousSummaryPath === undefined) {
-    delete process.env.GITHUB_STEP_SUMMARY;
-  } else {
-    process.env.GITHUB_STEP_SUMMARY = previousSummaryPath;
-  }
   await Promise.all(
     temporaryDirectories
       .splice(0)
@@ -262,8 +243,10 @@ describe('GitHub reporter', () => {
     );
   });
 
-  it('clears stale process-global summary content before writing', async () => {
+  it('does not write or discard pre-existing process-global summary content', async () => {
     const githubEnv = await githubEnvironment('github-global-state');
+    const previousBuffer = core.summary.stringify();
+    const staleBuffer = `${previousBuffer}stale private summary content`;
     core.summary.addRaw('stale private summary content');
 
     await captureWorkflowCommands(() =>
@@ -273,7 +256,34 @@ describe('GitHub reporter', () => {
     expect(await readFile(githubEnv.summaryPath, 'utf8')).not.toContain(
       'stale private summary content',
     );
-    expect(core.summary.isEmptyBuffer()).toBe(true);
+    expect(core.summary.stringify()).toBe(staleBuffer);
+  });
+
+  it('alternates injected summary paths without leaking cached paths or buffers', async () => {
+    const first = await githubEnvironment('github-alternating-first');
+    const second = await githubEnvironment('github-alternating-second');
+    const previousEnvironmentPath = process.env.GITHUB_STEP_SUMMARY;
+    const previousBuffer = core.summary.stringify();
+
+    await captureWorkflowCommands(async () => {
+      await writeGitHubReport(auditResultWithFindings(1), 'config.json', first);
+      await writeGitHubReport(emptyAuditResult(), 'config.json', second);
+    });
+
+    expect(await readFile(first.summaryPath, 'utf8')).toContain(
+      'Total findings: 1',
+    );
+    expect(await readFile(first.summaryPath, 'utf8')).not.toContain(
+      'No findings detected',
+    );
+    expect(await readFile(second.summaryPath, 'utf8')).toContain(
+      'Total findings: 0',
+    );
+    expect(await readFile(second.summaryPath, 'utf8')).toContain(
+      'No findings detected',
+    );
+    expect(process.env.GITHUB_STEP_SUMMARY).toBe(previousEnvironmentPath);
+    expect(core.summary.stringify()).toBe(previousBuffer);
   });
 
   it('keeps annotations and emits exactly one warning when summary is unavailable', async () => {
@@ -286,6 +296,24 @@ describe('GitHub reporter', () => {
     expect(output.match(/::error /gu)).toHaveLength(2);
     expect(output.match(/::warning::/gu)).toHaveLength(1);
     expect(output).toContain('GitHub step summary is unavailable');
+  });
+
+  it('writes to an injected summary path after a missing-summary call', async () => {
+    const githubEnv = await githubEnvironment('github-missing-then-present');
+    const previousEnvironmentPath = process.env.GITHUB_STEP_SUMMARY;
+    const previousBuffer = core.summary.stringify();
+
+    const output = await captureWorkflowCommands(async () => {
+      await writeGitHubReport(emptyAuditResult(), 'config.json', {});
+      await writeGitHubReport(emptyAuditResult(), 'config.json', githubEnv);
+    });
+
+    expect(output.match(/::warning::/gu)).toHaveLength(1);
+    expect(await readFile(githubEnv.summaryPath, 'utf8')).toContain(
+      'No findings detected',
+    );
+    expect(process.env.GITHUB_STEP_SUMMARY).toBe(previousEnvironmentPath);
+    expect(core.summary.stringify()).toBe(previousBuffer);
   });
 });
 

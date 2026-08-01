@@ -3,6 +3,9 @@ import { normalizeMessage } from '../core/privacy.js';
 import type { AuditResult, Finding } from '../model/types.js';
 
 const MAX_DISPLAYED_FINDINGS = 50;
+const SUMMARY_FILE_PATH_PROPERTY = '_filePath';
+
+let summaryStateQueue = Promise.resolve();
 
 export type GitHubReporterEnvironment = Readonly<NodeJS.ProcessEnv>;
 
@@ -91,6 +94,61 @@ function summaryHtml(result: AuditResult): string {
   return `${lines.join('\n')}\n`;
 }
 
+async function withExclusiveSummaryState(
+  operation: () => Promise<void>,
+): Promise<void> {
+  let release = (): void => undefined;
+  const previous = summaryStateQueue;
+  summaryStateQueue = new Promise<void>((resolveQueue) => {
+    release = resolveQueue;
+  });
+  await previous;
+  try {
+    await operation();
+  } finally {
+    release();
+  }
+}
+
+async function writeInjectedSummary(
+  html: string,
+  summaryPath: string,
+): Promise<void> {
+  await withExclusiveSummaryState(async () => {
+    const previousEnvironmentPath = process.env.GITHUB_STEP_SUMMARY;
+    const hadCachedPath = Reflect.has(core.summary, SUMMARY_FILE_PATH_PROPERTY);
+    const previousCachedPath: unknown = Reflect.get(
+      core.summary,
+      SUMMARY_FILE_PATH_PROPERTY,
+    );
+    const previousBuffer = core.summary.stringify();
+
+    process.env.GITHUB_STEP_SUMMARY = summaryPath;
+    Reflect.deleteProperty(core.summary, SUMMARY_FILE_PATH_PROPERTY);
+    core.summary.emptyBuffer().addRaw(html);
+
+    try {
+      await core.summary.write();
+    } finally {
+      core.summary.emptyBuffer().addRaw(previousBuffer);
+      if (hadCachedPath) {
+        Reflect.set(
+          core.summary,
+          SUMMARY_FILE_PATH_PROPERTY,
+          previousCachedPath,
+        );
+      } else {
+        Reflect.deleteProperty(core.summary, SUMMARY_FILE_PATH_PROPERTY);
+      }
+      if (previousEnvironmentPath === undefined) {
+        delete process.env.GITHUB_STEP_SUMMARY;
+      } else {
+        process.env.GITHUB_STEP_SUMMARY = previousEnvironmentPath;
+      }
+    }
+  });
+}
+
 export async function writeGitHubReport(
   result: AuditResult,
   relativeConfigPath: string,
@@ -105,17 +163,13 @@ export async function writeGitHubReport(
     });
   }
 
-  if (!environment.GITHUB_STEP_SUMMARY?.trim()) {
+  const summaryPath = environment.GITHUB_STEP_SUMMARY?.trim();
+  if (!summaryPath) {
     core.warning(
       'GitHub step summary is unavailable; annotations were emitted.',
     );
     return;
   }
 
-  core.summary.emptyBuffer().addRaw(summaryHtml(result));
-  try {
-    await core.summary.write();
-  } finally {
-    core.summary.emptyBuffer();
-  }
+  await writeInjectedSummary(summaryHtml(result), summaryPath);
 }
