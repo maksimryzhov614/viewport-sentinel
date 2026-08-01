@@ -2,15 +2,7 @@ import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  {
-    ignores: [
-      'dist/**',
-      'coverage/**',
-      'artifacts/**',
-      'config.schema.json',
-      'eslint.config.mjs',
-    ],
-  },
+  { ignores: ['dist/**', 'coverage/**', 'artifacts/**', 'config.schema.json'] },
   eslint.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
@@ -22,5 +14,9 @@ export default tseslint.config(
       },
     },
     rules: { '@typescript-eslint/consistent-type-imports': 'error' },
+  },
+  {
+    ...tseslint.configs.disableTypeChecked,
+    files: ['eslint.config.mjs'],
   },
 );
