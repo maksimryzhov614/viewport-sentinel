@@ -430,11 +430,12 @@ export async function captureBrowserSnapshot(
     }
 
     const viewportWidth = document.documentElement.clientWidth;
+    // The DOM typing is non-null, but browsers may expose no body for non-HTML documents.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    const bodyScrollWidth = document.body?.scrollWidth ?? 0;
     const documentWidth = Math.max(
       document.documentElement.scrollWidth,
-      // The DOM typing is non-null, but browsers may expose no body for non-HTML documents.
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      document.body?.scrollWidth ?? 0,
+      bodyScrollWidth,
     );
     const offenders: { selector: string; rect: Rect }[] = [];
 

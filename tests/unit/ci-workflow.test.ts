@@ -78,6 +78,20 @@ async function parseWorkflow(): Promise<Record<string, unknown>> {
   return workflow as Record<string, unknown>;
 }
 
+async function packageScripts(): Promise<Record<string, string>> {
+  const metadata = JSON.parse(
+    await readFile(resolve('package.json'), 'utf8'),
+  ) as { scripts?: unknown };
+  if (
+    typeof metadata.scripts !== 'object' ||
+    metadata.scripts === null ||
+    Array.isArray(metadata.scripts)
+  ) {
+    throw new Error('package.json scripts must be a mapping');
+  }
+  return metadata.scripts as Record<string, string>;
+}
+
 function object(value: unknown): Record<string, unknown> {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     throw new Error('Expected YAML mapping');
@@ -140,6 +154,7 @@ describe('CI workflow', () => {
       { run: 'npm run typecheck' },
       { run: 'npm run test:unit' },
       { run: 'npm run build' },
+      { run: 'npm run generated:check' },
     ]);
 
     const browser = object(jobs.browser);
@@ -155,6 +170,7 @@ describe('CI workflow', () => {
       { run: 'npm run verify:determinism -- 3' },
       { run: 'npm run verify:performance' },
       { run: 'npm pack --dry-run' },
+      { run: 'npm run generated:check' },
       {
         if: '${{ failure() }}',
         uses: 'actions/upload-artifact@v5',
@@ -176,6 +192,7 @@ describe('CI workflow', () => {
       },
       { run: 'npm ci' },
       { run: 'npm run build' },
+      { run: 'npm run generated:check' },
       {
         name: 'Start fixture and wait for readiness',
         run:
@@ -192,5 +209,13 @@ describe('CI workflow', () => {
         },
       },
     ]);
+
+    const scripts = await packageScripts();
+    expect(scripts['generated:check']).toBe(
+      'git diff --exit-code -- dist config.schema.json',
+    );
+    expect(scripts.verify).toBe(
+      'npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm pack --dry-run && npm run generated:check',
+    );
   });
 });

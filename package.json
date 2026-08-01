@@ -44,7 +44,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json && node scripts/generate-schema.mjs",
-    "schema:check": "npm run build && git diff --exit-code -- config.schema.json",
+    "generated:check": "git diff --exit-code -- dist config.schema.json",
+    "schema:check": "npm run build && npm run generated:check",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -53,7 +54,7 @@
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
     "fixture": "tsx fixtures/server.ts",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm pack --dry-run",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm pack --dry-run && npm run generated:check",
     "verify:determinism": "node scripts/verify-determinism.mjs",
     "verify:performance": "node scripts/verify-performance.mjs",
     "prepare": "npm run build"

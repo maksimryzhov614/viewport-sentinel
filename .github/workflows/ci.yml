@@ -29,6 +29,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run test:unit
       - run: npm run build
+      - run: npm run generated:check
 
   browser:
     runs-on: ubuntu-latest
@@ -43,6 +44,7 @@ jobs:
       - run: npm run verify:determinism -- 3
       - run: npm run verify:performance
       - run: npm pack --dry-run
+      - run: npm run generated:check
       - if: ${{ failure() }}
         uses: actions/upload-artifact@v5
         with:
@@ -59,6 +61,7 @@ jobs:
           node-version: 24
       - run: npm ci
       - run: npm run build
+      - run: npm run generated:check
       - name: Start fixture and wait for readiness
         run: |
           npm run fixture > /tmp/viewport-sentinel-fixture.log 2>&1 &
