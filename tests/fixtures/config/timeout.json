@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../config.schema.json",
+  "version": 1,
+  "baseUrl": "http://127.0.0.1:4173",
+  "pages": [
+    { "name": "timeout", "path": "/timeout", "readySelector": "#never" }
+  ],
+  "viewports": [
+    {
+      "name": "mobile-320",
+      "width": 320,
+      "height": 844,
+      "deviceScaleFactor": 1
+    }
+  ],
+  "timeoutMs": 1000,
+  "output": {
+    "dir": "artifacts/viewport-sentinel",
+    "formats": ["json", "sarif"]
+  }
+}
