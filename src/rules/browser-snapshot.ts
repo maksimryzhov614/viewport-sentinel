@@ -100,18 +100,39 @@ export async function captureBrowserSnapshot(
       );
     }
 
+    function positionedContainingBlock(
+      element: Element,
+    ): Element | null | undefined {
+      const position = getComputedStyle(element).position;
+      if (position !== 'absolute' && position !== 'fixed') {
+        return undefined;
+      }
+      return element instanceof HTMLElement
+        ? element.offsetParent
+        : element.parentElement;
+    }
+
     function clippedRect(element: Element): Rect | null {
       const bounding = element.getBoundingClientRect();
       let left = bounding.left;
       let right = bounding.right;
       let top = bounding.top;
       let bottom = bounding.bottom;
+      const containingBlock = positionedContainingBlock(element);
+      let reachedContainingBlock = containingBlock === undefined;
 
       for (
         let ancestor = element.parentElement;
         ancestor !== null;
         ancestor = ancestor.parentElement
       ) {
+        if (ancestor === containingBlock) {
+          reachedContainingBlock = true;
+        }
+        if (!reachedContainingBlock) {
+          continue;
+        }
+
         const style = getComputedStyle(ancestor);
         const ancestorRect = ancestor.getBoundingClientRect();
         if (clipsAxis(style.overflowX)) {
@@ -143,11 +164,19 @@ export async function captureBrowserSnapshot(
     function nearestHorizontalClippingAncestor(
       element: Element,
     ): Element | null {
+      const containingBlock = positionedContainingBlock(element);
+      let reachedContainingBlock = containingBlock === undefined;
       for (
         let ancestor = element.parentElement;
         ancestor !== null;
         ancestor = ancestor.parentElement
       ) {
+        if (ancestor === containingBlock) {
+          reachedContainingBlock = true;
+        }
+        if (!reachedContainingBlock) {
+          continue;
+        }
         if (clipsAxis(getComputedStyle(ancestor).overflowX)) {
           return ancestor;
         }

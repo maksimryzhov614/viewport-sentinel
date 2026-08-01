@@ -174,6 +174,46 @@ describe('VS001 browser snapshot', () => {
     expect(snapshot.overflow.offenders[0]?.selector).toBe('#real-offender');
   });
 
+  it.each([
+    ['viewport-fixed', 'position: fixed', '', true],
+    ['transformed-fixed', 'position: fixed', 'transform: translateZ(0)', false],
+    ['initial-absolute', 'position: absolute', '', true],
+    ['container-absolute', 'position: absolute', 'position: relative', false],
+  ])(
+    'uses the actual clipping ancestry for a %s descendant',
+    async (_name, targetPosition, containerPosition, expectedOffender) => {
+      const snapshot = await contentSnapshot(`
+        <style>
+          body { margin: 0; }
+          #clip {
+            width: 100px;
+            height: 100px;
+            overflow: hidden;
+            ${containerPosition};
+          }
+          #positioned-offender {
+            ${targetPosition};
+            left: 0;
+            top: 0;
+            width: 400px;
+            height: 10px;
+          }
+          #document-overflow { width: 400px; height: 10px; }
+        </style>
+        <div id="clip"><div id="positioned-offender"></div></div>
+        <div id="document-overflow"></div>
+      `);
+
+      expect(
+        snapshot.overflow.offenders.map(({ selector }) => selector),
+      ).toEqual(
+        expectedOffender
+          ? ['#positioned-offender', '#document-overflow']
+          : ['#document-overflow'],
+      );
+    },
+  );
+
   it('keeps only rendered offenders from the light DOM', async () => {
     const snapshot = await contentSnapshot(`
       <style>
