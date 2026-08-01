@@ -234,10 +234,11 @@ export async function captureBrowserSnapshot(
       const matchesWithoutTabIndex = element.matches(
         'a[href], button, input, select, textarea, [role="button"]',
       );
+      const tabIndex = 'tabIndex' in element ? element.tabIndex : undefined;
       if (
         element.hasAttribute('tabindex') &&
         !matchesWithoutTabIndex &&
-        (!(element instanceof HTMLElement) || element.tabIndex === -1)
+        (typeof tabIndex !== 'number' || tabIndex === -1)
       ) {
         return false;
       }

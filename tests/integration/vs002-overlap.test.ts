@@ -271,6 +271,32 @@ describe('VS002 browser snapshot', () => {
     expect(snapshot.overlaps[0]?.targetSelector).toBe('#target');
   });
 
+  it.each([
+    ['0', 1],
+    ['-1', 0],
+  ])(
+    'treats an SVG [tabindex="%s"] target according to its DOM tabIndex',
+    async (tabindex, expectedCount) => {
+      const snapshot = await contentSnapshot(`
+        <style>
+          body { margin: 0; }
+          #target { position: absolute; left: 20px; top: 20px; width: 100px; height: 40px; }
+          #cover { position: fixed; left: 20px; top: 20px; width: 100px; height: 40px; z-index: 1; }
+        </style>
+        <svg id="target" tabindex="${tabindex}" viewBox="0 0 100 40">
+          <rect width="100" height="40"></rect>
+        </svg>
+        <div id="cover"></div>
+      `);
+
+      expect(snapshot.overlaps).toHaveLength(expectedCount);
+      expect(
+        snapshot.overlaps.map(({ targetSelector }) => targetSelector),
+      ).toEqual(expectedCount === 1 ? ['#target'] : []);
+      expect(evaluateVS002(snapshot)).toHaveLength(expectedCount);
+    },
+  );
+
   it('excludes non-actionable and non-visible targets', async () => {
     const snapshot = await contentSnapshot(`
       <style>
