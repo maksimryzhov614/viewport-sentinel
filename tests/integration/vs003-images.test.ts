@@ -4,10 +4,14 @@ import {
   startFixtureServer,
   type FixtureServer,
 } from '../../src/fixtures/server.js';
+import { canonicalStringify } from '../../src/core/canonical.js';
+import { materializeFinding } from '../../src/core/findings.js';
 import type {
+  AuditResult,
   NormalizedPageSpec,
   ViewportSpec,
 } from '../../src/model/types.js';
+import { toSarif } from '../../src/reporters/sarif.js';
 import { captureBrowserSnapshot } from '../../src/rules/browser-snapshot.js';
 import { evaluateVS001 } from '../../src/rules/vs001-overflow.js';
 import { evaluateVS002 } from '../../src/rules/vs002-overlap.js';
@@ -248,6 +252,96 @@ describe('VS003 browser snapshot', () => {
     expect(JSON.stringify(snapshot.images[0])).not.toMatch(
       /alice|secret|first|second|third|fourth|fifth|sixth|fallback|#one/u,
     );
+  });
+
+  it('redacts non-HTTP(S) image payloads from the snapshot through final JSON and SARIF', async () => {
+    const snapshot = await contentSnapshot(`
+      <style>body { margin: 0; } img { display: block; width: 20px; height: 20px; }</style>
+      <img id="data-inline" src="data:image/png;base64,VS003_DATA_SECRET" alt="">
+      <img id="javascript-inline" src="javascript:VS003_JAVASCRIPT_SECRET" alt="">
+      <img id="blob-inline" src="blob:https://example.test/VS003_BLOB_SECRET" alt="">
+    `);
+    const drafts = evaluateVS003(snapshot);
+
+    expect(
+      snapshot.images.map(({ selector, currentSrc, sourceCandidates }) => ({
+        selector,
+        currentSrc,
+        sourceCandidates,
+      })),
+    ).toEqual([
+      {
+        selector: '#data-inline',
+        currentSrc: '<inline>',
+        sourceCandidates: ['<inline>'],
+      },
+      {
+        selector: '#javascript-inline',
+        currentSrc: '<inline>',
+        sourceCandidates: ['<inline>'],
+      },
+      {
+        selector: '#blob-inline',
+        currentSrc: '<inline>',
+        sourceCandidates: ['<inline>'],
+      },
+    ]);
+    expect(drafts).toHaveLength(3);
+    expect(JSON.stringify(drafts)).not.toMatch(
+      /VS003_(?:DATA|JAVASCRIPT|BLOB)_SECRET|data:image|javascript:|blob:/u,
+    );
+
+    const auditedUrl = `${baseUrl}/inline-sources`;
+    const page = pageSpec(auditedUrl);
+    const findings = drafts.map((draft) =>
+      materializeFinding(
+        { page, viewport: MOBILE, sanitizedUrl: auditedUrl },
+        draft,
+      ),
+    );
+    const result: AuditResult = {
+      schemaVersion: 1,
+      complete: true,
+      tool: { name: 'viewport-sentinel', version: '0.1.0' },
+      browser: {
+        name: 'chromium',
+        playwrightVersion: '1.62.1',
+        version: browser.version(),
+      },
+      config: {
+        version: 1,
+        pages: [
+          {
+            name: page.name,
+            url: auditedUrl,
+            hasReadySelector: false,
+            consoleIgnoreCount: 0,
+          },
+        ],
+        viewports: [MOBILE],
+        timeoutMs: 10_000,
+        formats: ['json', 'sarif'],
+      },
+      combinations: { total: 1, completed: 1, failedReadiness: 0 },
+      totals: {
+        findingCount: findings.length,
+        suppressedConsoleCount: 0,
+        omittedFindingCount: 0,
+        omittedByCombination: [],
+      },
+      findings,
+    };
+    const reports = [
+      canonicalStringify(result),
+      canonicalStringify(toSarif(result, 'viewport-sentinel.config.json')),
+    ];
+
+    for (const report of reports) {
+      expect(report).toContain('"<inline>"');
+      expect(report).not.toMatch(
+        /VS003_(?:DATA|JAVASCRIPT|BLOB)_SECRET|data:image|javascript:|blob:/u,
+      );
+    }
   });
 
   it('starts all decodes together and records mixed outcomes in document order after one shared window', async () => {

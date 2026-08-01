@@ -6,6 +6,9 @@ const TRAILING_URL_PUNCTUATION = /[.,;:!?\])}]+$/u;
 export function sanitizeUrl(value: string): string {
   try {
     const url = new URL(value);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return '<inline>';
+    }
     url.username = '';
     url.password = '';
     url.search = '';

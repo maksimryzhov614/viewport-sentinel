@@ -23,6 +23,15 @@ describe('sanitizeUrl', () => {
   it('replaces invalid URLs with the inline marker', () => {
     expect(sanitizeUrl('not a URL')).toBe('<inline>');
   });
+
+  it.each([
+    'data:image/png;base64,PRIVATE_DATA_TOKEN',
+    'javascript:PRIVATE_JAVASCRIPT_TOKEN',
+    'blob:https://example.test/PRIVATE_BLOB_TOKEN',
+    'ftp://user:pass@example.test/private?token=PRIVATE_FTP_TOKEN#secret',
+  ])('replaces the non-HTTP(S) URL %s with the inline marker', (url) => {
+    expect(sanitizeUrl(url)).toBe('<inline>');
+  });
 });
 
 describe('normalizeMessage', () => {

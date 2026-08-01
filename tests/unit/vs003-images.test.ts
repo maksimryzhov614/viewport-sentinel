@@ -137,6 +137,34 @@ describe('evaluateVS003', () => {
     });
   });
 
+  it('replaces non-HTTP(S) selected and candidate payloads with inline markers', () => {
+    const finding = evaluateVS003(
+      snapshotWithImages([
+        image({
+          currentSrc: 'data:image/png;base64,PRIVATE_CURRENT_TOKEN',
+          sourceCandidates: [
+            'javascript:PRIVATE_JAVASCRIPT_TOKEN 1x',
+            'blob:https://example.test/PRIVATE_BLOB_TOKEN 2x',
+            'data:image/png;base64,PRIVATE_DATA_TOKEN 640w',
+          ],
+          decode: 'rejected',
+        }),
+      ]),
+    )[0];
+
+    expect(finding).toMatchObject({
+      evidence: {
+        kind: 'image',
+        currentSrc: '<inline>',
+        sourceCandidates: ['<inline> 1x', '<inline> 2x', '<inline> 640w'],
+      },
+      identity: ['#product-image', '<inline>'],
+    });
+    expect(JSON.stringify(finding)).not.toMatch(
+      /PRIVATE_|data:image|javascript:|blob:/u,
+    );
+  });
+
   it('preserves image order and does not mutate its snapshot input', () => {
     const snapshot = snapshotWithImages([
       image({ selector: '#first', currentSrc: '', decode: 'rejected' }),
