@@ -1,5 +1,5 @@
 import type { Page } from 'playwright';
-import { roundCss, roundRect } from '../core/privacy.js';
+import { roundCss, roundRect, sanitizeUrl } from '../core/privacy.js';
 import type { Rect } from '../model/types.js';
 
 export interface OverlapSnapshot {
@@ -35,7 +35,7 @@ export interface BrowserSnapshot {
 export async function captureBrowserSnapshot(
   page: Page,
 ): Promise<BrowserSnapshot> {
-  const snapshot = await page.evaluate(() => {
+  const snapshot = await page.evaluate(async () => {
     function rectValue(rect: {
       x: number;
       y: number;
@@ -309,6 +309,126 @@ export async function captureBrowserSnapshot(
       return current === null ? selector : `<truncated> > ${selector}`;
     }
 
+    function absoluteUrlToken(value: string): string {
+      try {
+        return new URL(value, document.baseURI).href;
+      } catch {
+        return value;
+      }
+    }
+
+    function isAsciiWhitespace(value: string): boolean {
+      return (
+        value === '\u0009' ||
+        value === '\u000a' ||
+        value === '\u000c' ||
+        value === '\u000d' ||
+        value === '\u0020'
+      );
+    }
+
+    function parseSrcset(value: string): string[] {
+      const candidates: string[] = [];
+      let position = 0;
+
+      while (position < value.length) {
+        while (
+          position < value.length &&
+          (isAsciiWhitespace(value[position] ?? '') || value[position] === ',')
+        ) {
+          position += 1;
+        }
+        if (position === value.length) {
+          break;
+        }
+
+        const urlStart = position;
+        while (
+          position < value.length &&
+          !isAsciiWhitespace(value[position] ?? '')
+        ) {
+          position += 1;
+        }
+        let url = value.slice(urlStart, position);
+
+        if (url.endsWith(',')) {
+          url = url.replace(/,+$/u, '');
+          if (url !== '') {
+            candidates.push(absoluteUrlToken(url));
+          }
+          continue;
+        }
+
+        while (
+          position < value.length &&
+          isAsciiWhitespace(value[position] ?? '')
+        ) {
+          position += 1;
+        }
+        const descriptorStart = position;
+        let parentheses = 0;
+        while (position < value.length) {
+          const character = value[position];
+          if (character === '(') {
+            parentheses += 1;
+          } else if (character === ')') {
+            parentheses = Math.max(0, parentheses - 1);
+          } else if (character === ',' && parentheses === 0) {
+            break;
+          }
+          position += 1;
+        }
+        const descriptor = value.slice(descriptorStart, position).trim();
+        if (value[position] === ',') {
+          position += 1;
+        }
+
+        if (url !== '') {
+          const absoluteUrl = absoluteUrlToken(url);
+          candidates.push(
+            descriptor === '' ? absoluteUrl : `${absoluteUrl} ${descriptor}`,
+          );
+        }
+      }
+
+      return candidates;
+    }
+
+    function pictureSources(image: HTMLImageElement): HTMLSourceElement[] {
+      if (!(image.parentElement instanceof HTMLPictureElement)) {
+        return [];
+      }
+      return [...image.parentElement.children].filter(
+        (child): child is HTMLSourceElement =>
+          child instanceof HTMLSourceElement && child.hasAttribute('srcset'),
+      );
+    }
+
+    function hasImageCandidate(image: HTMLImageElement): boolean {
+      return (
+        image.hasAttribute('src') ||
+        image.hasAttribute('srcset') ||
+        pictureSources(image).length > 0
+      );
+    }
+
+    function imageSourceCandidates(image: HTMLImageElement): string[] {
+      const candidates = pictureSources(image).flatMap((source) =>
+        parseSrcset(source.getAttribute('srcset') ?? ''),
+      );
+      if (image.hasAttribute('srcset')) {
+        candidates.push(...parseSrcset(image.getAttribute('srcset') ?? ''));
+      }
+      if (image.hasAttribute('src')) {
+        candidates.push(absoluteUrlToken(image.getAttribute('src') ?? ''));
+      }
+      return candidates;
+    }
+
+    function safeNaturalDimension(value: number): number {
+      return Number.isSafeInteger(value) && value >= 0 ? value : 0;
+    }
+
     const viewportWidth = document.documentElement.clientWidth;
     const documentWidth = Math.max(
       document.documentElement.scrollWidth,
@@ -482,12 +602,74 @@ export async function captureBrowserSnapshot(
       }
     }
 
+    const imageElements = [...document.querySelectorAll('img')].filter(
+      (image) =>
+        hasImageCandidate(image) &&
+        isRendered(image) &&
+        (clippedRect(image) !== null || image.loading !== 'lazy'),
+    );
+    const decodeRecords = imageElements.map((image) => {
+      const record: {
+        image: HTMLImageElement;
+        decode: ImageSnapshot['decode'];
+        completion: Promise<void>;
+      } = {
+        image,
+        decode: 'timeout',
+        completion: Promise.resolve(),
+      };
+      try {
+        record.completion = image.decode().then(
+          () => {
+            record.decode = 'resolved';
+          },
+          () => {
+            record.decode = 'rejected';
+          },
+        );
+      } catch {
+        record.decode = 'rejected';
+      }
+      return record;
+    });
+
+    if (decodeRecords.length > 0) {
+      let timeoutId: number | undefined;
+      await Promise.race([
+        Promise.all(decodeRecords.map(({ completion }) => completion)),
+        new Promise<void>((resolve) => {
+          timeoutId = window.setTimeout(resolve, 2_000);
+        }),
+      ]);
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId);
+      }
+    }
+
+    const images: ImageSnapshot[] = decodeRecords.map(({ image, decode }) => ({
+      selector: diagnosticSelector(image),
+      currentSrc: image.currentSrc,
+      sourceCandidates: imageSourceCandidates(image),
+      complete: image.complete,
+      naturalWidth: safeNaturalDimension(image.naturalWidth),
+      naturalHeight: safeNaturalDimension(image.naturalHeight),
+      decode,
+    }));
+
     return {
       overflow: { viewportWidth, documentWidth, offenders },
       overlaps,
-      images: [],
+      images,
     };
   });
+
+  function sanitizeCandidate(value: string): string {
+    const descriptorIndex = value.search(/\s/u);
+    if (descriptorIndex === -1) {
+      return sanitizeUrl(value);
+    }
+    return `${sanitizeUrl(value.slice(0, descriptorIndex))}${value.slice(descriptorIndex)}`;
+  }
 
   return {
     overflow: {
@@ -499,6 +681,10 @@ export async function captureBrowserSnapshot(
       })),
     },
     overlaps: snapshot.overlaps,
-    images: [],
+    images: snapshot.images.map((image) => ({
+      ...image,
+      currentSrc: image.currentSrc === '' ? '' : sanitizeUrl(image.currentSrc),
+      sourceCandidates: image.sourceCandidates.map(sanitizeCandidate),
+    })),
   };
 }
