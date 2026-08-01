@@ -58,12 +58,27 @@ export async function captureBrowserSnapshot(
       };
     }
 
+    function effectiveOpacity(element: Element): number {
+      let opacity = 1;
+      for (
+        let current: Element | null = element;
+        current !== null;
+        current = current.parentElement
+      ) {
+        opacity = Number.parseFloat(
+          (
+            opacity * Number.parseFloat(getComputedStyle(current).opacity)
+          ).toPrecision(15),
+        );
+      }
+      return opacity;
+    }
+
     function isRendered(element: Element): boolean {
       if (!element.isConnected) {
         return false;
       }
 
-      let opacity = 1;
       for (
         let current: Element | null = element;
         current !== null;
@@ -79,12 +94,11 @@ export async function captureBrowserSnapshot(
         ) {
           return false;
         }
-        opacity *= Number.parseFloat(style.opacity);
       }
 
       const rect = element.getBoundingClientRect();
       return (
-        opacity > 0.01 &&
+        effectiveOpacity(element) > 0.01 &&
         element.getClientRects().length > 0 &&
         rect.width > 0 &&
         rect.height > 0
@@ -112,7 +126,7 @@ export async function captureBrowserSnapshot(
         : element.parentElement;
     }
 
-    function clippedRect(element: Element): Rect | null {
+    function ancestorClippedRect(element: Element): Rect | null {
       const bounding = element.getBoundingClientRect();
       let left = bounding.left;
       let right = bounding.right;
@@ -159,6 +173,76 @@ export async function captureBrowserSnapshot(
         bottom,
         left,
       };
+    }
+
+    function clippedRect(element: Element): Rect | null {
+      const rect = ancestorClippedRect(element);
+      if (rect === null) {
+        return null;
+      }
+
+      const left = Math.max(rect.left, 0);
+      const right = Math.min(rect.right, document.documentElement.clientWidth);
+      const top = Math.max(rect.top, 0);
+      const bottom = Math.min(
+        rect.bottom,
+        document.documentElement.clientHeight,
+      );
+      const width = right - left;
+      const height = bottom - top;
+      if (width <= 0 || height <= 0 || width * height < 1) {
+        return null;
+      }
+
+      return {
+        x: left,
+        y: top,
+        width,
+        height,
+        top,
+        right,
+        bottom,
+        left,
+      };
+    }
+
+    function isActionable(element: Element): boolean {
+      if (!isRendered(element) || clippedRect(element) === null) {
+        return false;
+      }
+      if (element.closest('[inert]') !== null) {
+        return false;
+      }
+      if (
+        (element instanceof HTMLButtonElement ||
+          element instanceof HTMLInputElement ||
+          element instanceof HTMLSelectElement ||
+          element instanceof HTMLTextAreaElement) &&
+        element.disabled
+      ) {
+        return false;
+      }
+      if (
+        element.getAttribute('aria-disabled')?.trim().toLowerCase() === 'true'
+      ) {
+        return false;
+      }
+      if (getComputedStyle(element).pointerEvents === 'none') {
+        return false;
+      }
+
+      const matchesWithoutTabIndex = element.matches(
+        'a[href], button, input, select, textarea, [role="button"]',
+      );
+      if (
+        element.hasAttribute('tabindex') &&
+        !matchesWithoutTabIndex &&
+        (!(element instanceof HTMLElement) || element.tabIndex === -1)
+      ) {
+        return false;
+      }
+
+      return true;
     }
 
     function nearestHorizontalClippingAncestor(
@@ -239,7 +323,7 @@ export async function captureBrowserSnapshot(
           continue;
         }
 
-        const rect = clippedRect(element);
+        const rect = ancestorClippedRect(element);
         if (
           rect === null ||
           (rect.left >= -1 && rect.right <= viewportWidth + 1)
@@ -250,7 +334,7 @@ export async function captureBrowserSnapshot(
         const clippingAncestor = nearestHorizontalClippingAncestor(element);
         if (clippingAncestor !== null) {
           const overflowX = getComputedStyle(clippingAncestor).overflowX;
-          const ancestorRect = clippedRect(clippingAncestor);
+          const ancestorRect = ancestorClippedRect(clippingAncestor);
           if (
             (overflowX === 'auto' || overflowX === 'scroll') &&
             ancestorRect !== null &&
@@ -271,9 +355,135 @@ export async function captureBrowserSnapshot(
       }
     }
 
+    const actionableSelector =
+      'a[href], button, input, select, textarea, [role="button"], [tabindex]';
+    const targets: { element: Element; rect: Rect }[] = [];
+    const seenTargets = new Set<Element>();
+    for (const element of document.querySelectorAll(actionableSelector)) {
+      if (seenTargets.has(element)) {
+        continue;
+      }
+      seenTargets.add(element);
+      if (!isActionable(element)) {
+        continue;
+      }
+      const rect = clippedRect(element);
+      if (rect !== null) {
+        targets.push({ element, rect });
+      }
+    }
+
+    const overlays: { element: Element; rect: Rect }[] = [];
+    for (const element of document.querySelectorAll('*')) {
+      const style = getComputedStyle(element);
+      if (
+        (style.position !== 'fixed' && style.position !== 'sticky') ||
+        !isRendered(element) ||
+        effectiveOpacity(element) <= 0.01 ||
+        style.pointerEvents === 'none'
+      ) {
+        continue;
+      }
+      const rect = clippedRect(element);
+      if (rect !== null) {
+        overlays.push({ element, rect });
+      }
+    }
+
+    function intersection(first: Rect, second: Rect): Rect | null {
+      const left = Math.max(first.left, second.left);
+      const right = Math.min(first.right, second.right);
+      const top = Math.max(first.top, second.top);
+      const bottom = Math.min(first.bottom, second.bottom);
+      if (right <= left || bottom <= top) {
+        return null;
+      }
+      return {
+        x: left,
+        y: top,
+        width: right - left,
+        height: bottom - top,
+        top,
+        right,
+        bottom,
+        left,
+      };
+    }
+
+    function pointHitsCover(
+      x: number,
+      y: number,
+      cover: Element,
+      target: Element,
+    ): boolean {
+      const hit = document.elementFromPoint(x, y);
+      if (hit === null || hit === target || target.contains(hit)) {
+        return false;
+      }
+      return hit === cover || cover.contains(hit);
+    }
+
+    const overlaps: OverlapSnapshot[] = [];
+    for (const cover of overlays) {
+      for (const target of targets) {
+        if (
+          cover.element === target.element ||
+          cover.element.contains(target.element) ||
+          target.element.contains(cover.element)
+        ) {
+          continue;
+        }
+
+        const overlapRect = intersection(cover.rect, target.rect);
+        if (overlapRect === null) {
+          continue;
+        }
+        const targetArea = target.rect.width * target.rect.height;
+        const overlapRatio =
+          (overlapRect.width * overlapRect.height) / targetArea;
+        const centerCovered = pointHitsCover(
+          target.rect.left + target.rect.width / 2,
+          target.rect.top + target.rect.height / 2,
+          cover.element,
+          target.element,
+        );
+        let sampledHit = false;
+        if (overlapRatio > 0.25) {
+          for (const xFraction of [0.25, 0.5, 0.75]) {
+            for (const yFraction of [0.25, 0.5, 0.75]) {
+              if (
+                pointHitsCover(
+                  overlapRect.left + overlapRect.width * xFraction,
+                  overlapRect.top + overlapRect.height * yFraction,
+                  cover.element,
+                  target.element,
+                )
+              ) {
+                sampledHit = true;
+                break;
+              }
+            }
+            if (sampledHit) {
+              break;
+            }
+          }
+        }
+
+        overlaps.push({
+          coverSelector: diagnosticSelector(cover.element),
+          targetSelector: diagnosticSelector(target.element),
+          coverRect: rectValue(cover.rect),
+          targetRect: rectValue(target.rect),
+          overlapRatio,
+          centerCovered,
+          sampledHit,
+        });
+      }
+    }
+
     return {
       overflow: { viewportWidth, documentWidth, offenders },
-      overlaps: [],
+      overlaps,
       images: [],
     };
   });
@@ -287,7 +497,7 @@ export async function captureBrowserSnapshot(
         rect: roundRect(rect),
       })),
     },
-    overlaps: [],
+    overlaps: snapshot.overlaps,
     images: [],
   };
 }
