@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CanonicalValueError } from '../../src/core/canonical.js';
 import {
   normalizeMessage,
   roundCss,
@@ -58,6 +59,14 @@ describe('geometry rounding', () => {
     expect(roundCss(1.235)).toBe(1.24);
   });
 
+  it.each([
+    ['NaN', Number.NaN],
+    ['positive infinity', Number.POSITIVE_INFINITY],
+    ['negative infinity', Number.NEGATIVE_INFINITY],
+  ])('rejects %s CSS values', (_label, value) => {
+    expect(() => roundCss(value)).toThrow(CanonicalValueError);
+  });
+
   it('returns a newly rounded rectangle', () => {
     const rect = {
       x: -0.004,
@@ -81,5 +90,20 @@ describe('geometry rounding', () => {
       left: 0,
     });
     expect(roundRect(rect)).not.toBe(rect);
+  });
+
+  it('rejects a rectangle containing non-finite geometry', () => {
+    expect(() =>
+      roundRect({
+        x: 0,
+        y: 0,
+        width: Number.POSITIVE_INFINITY,
+        height: 20,
+        top: 0,
+        right: 20,
+        bottom: 20,
+        left: 0,
+      }),
+    ).toThrow(CanonicalValueError);
   });
 });

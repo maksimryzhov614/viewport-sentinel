@@ -1,3 +1,4 @@
+import { CanonicalValueError } from './canonical.js';
 import type { Rect } from '../model/types.js';
 
 const TRAILING_URL_PUNCTUATION = /[.,;:!?\])}]+$/u;
@@ -30,6 +31,9 @@ export function normalizeMessage(value: string): string {
 }
 
 export function roundCss(value: number): number {
+  if (!Number.isFinite(value)) {
+    throw new CanonicalValueError('CSS values must be finite');
+  }
   const rounded = Math.round(value * 100) / 100;
   return Object.is(rounded, -0) ? 0 : rounded;
 }
