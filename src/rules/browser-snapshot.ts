@@ -669,7 +669,10 @@ export async function captureBrowserSnapshot(
     if (descriptorIndex === -1) {
       return sanitizeUrl(value);
     }
-    return `${sanitizeUrl(value.slice(0, descriptorIndex))}${value.slice(descriptorIndex)}`;
+    const sanitizedUrl = sanitizeUrl(value.slice(0, descriptorIndex));
+    return sanitizedUrl === '<inline>'
+      ? '<inline>'
+      : `${sanitizedUrl}${value.slice(descriptorIndex)}`;
   }
 
   return {

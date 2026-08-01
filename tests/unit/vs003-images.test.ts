@@ -143,9 +143,9 @@ describe('evaluateVS003', () => {
         image({
           currentSrc: 'data:image/png;base64,PRIVATE_CURRENT_TOKEN',
           sourceCandidates: [
-            'javascript:PRIVATE_JAVASCRIPT_TOKEN 1x',
-            'blob:https://example.test/PRIVATE_BLOB_TOKEN 2x',
-            'data:image/png;base64,PRIVATE_DATA_TOKEN 640w',
+            'javascript:PRIVATE_JAVASCRIPT_TOKEN PRIVATE_JAVASCRIPT_SUFFIX',
+            'blob:https://example.test/PRIVATE_BLOB_TOKEN PRIVATE_BLOB_SUFFIX',
+            'data:image/png;base64,PRIVATE_DATA_TOKEN PRIVATE_DATA_SUFFIX',
           ],
           decode: 'rejected',
         }),
@@ -156,7 +156,7 @@ describe('evaluateVS003', () => {
       evidence: {
         kind: 'image',
         currentSrc: '<inline>',
-        sourceCandidates: ['<inline> 1x', '<inline> 2x', '<inline> 640w'],
+        sourceCandidates: ['<inline>', '<inline>', '<inline>'],
       },
       identity: ['#product-image', '<inline>'],
     });
