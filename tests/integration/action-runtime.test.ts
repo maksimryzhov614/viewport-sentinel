@@ -7,7 +7,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import {
   startFixtureServer,
   type FixtureServer,
-} from '../../fixtures/server.js';
+} from '../../src/fixtures/server.js';
 
 const runActionPath = resolve('dist/action/run.js');
 const exitActionPath = resolve('dist/action/exit.js');

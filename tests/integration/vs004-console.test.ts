@@ -3,7 +3,7 @@ import { chromium, type Browser, type Page } from 'playwright';
 import {
   startFixtureServer,
   type FixtureServer,
-} from '../../fixtures/server.js';
+} from '../../src/fixtures/server.js';
 import type { ViewportSpec } from '../../src/model/types.js';
 import { attachConsoleCapture } from '../../src/runner/console-events.js';
 import { createAuditContext } from '../../src/runner/browser-context.js';

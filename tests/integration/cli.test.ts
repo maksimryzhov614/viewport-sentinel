@@ -14,7 +14,7 @@ import {
 import {
   startFixtureServer,
   type FixtureServer,
-} from '../../fixtures/server.js';
+} from '../../src/fixtures/server.js';
 import {
   defaultRunCliDependencies,
   runCli,

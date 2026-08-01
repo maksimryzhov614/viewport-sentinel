@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import {
   startFixtureServer,
   type FixtureServer,
-} from '../../fixtures/server.js';
+} from '../../src/fixtures/server.js';
 import { loadConfig } from '../../src/config/load-config.js';
 import { canonicalStringify } from '../../src/core/canonical.js';
 import { auditConfig } from '../../src/runner/audit-config.js';

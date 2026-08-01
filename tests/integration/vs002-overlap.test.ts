@@ -3,7 +3,7 @@ import { chromium, type Browser, type Page } from 'playwright';
 import {
   startFixtureServer,
   type FixtureServer,
-} from '../../fixtures/server.js';
+} from '../../src/fixtures/server.js';
 import type {
   NormalizedPageSpec,
   ViewportSpec,
