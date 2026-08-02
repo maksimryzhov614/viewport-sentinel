@@ -141,11 +141,11 @@ describe('evaluateVS003', () => {
     const finding = evaluateVS003(
       snapshotWithImages([
         image({
-          currentSrc: 'data:image/png;base64,PRIVATE_CURRENT_TOKEN',
+          currentSrc: 'data:image/png;base64,SYNTHETIC_CURRENT_TOKEN',
           sourceCandidates: [
-            'javascript:PRIVATE_JAVASCRIPT_TOKEN PRIVATE_JAVASCRIPT_SUFFIX',
-            'blob:https://example.test/PRIVATE_BLOB_TOKEN PRIVATE_BLOB_SUFFIX',
-            'data:image/png;base64,PRIVATE_DATA_TOKEN PRIVATE_DATA_SUFFIX',
+            'javascript:SYNTHETIC_JAVASCRIPT_TOKEN SYNTHETIC_JAVASCRIPT_SUFFIX',
+            'blob:https://example.test/SYNTHETIC_BLOB_TOKEN SYNTHETIC_BLOB_SUFFIX',
+            'data:image/png;base64,SYNTHETIC_DATA_TOKEN SYNTHETIC_DATA_SUFFIX',
           ],
           decode: 'rejected',
         }),
@@ -161,7 +161,7 @@ describe('evaluateVS003', () => {
       identity: ['#product-image', '<inline>'],
     });
     expect(JSON.stringify(finding)).not.toMatch(
-      /PRIVATE_|data:image|javascript:|blob:/u,
+      /SYNTHETIC_|data:image|javascript:|blob:/u,
     );
   });
 

@@ -25,10 +25,10 @@ describe('sanitizeUrl', () => {
   });
 
   it.each([
-    'data:image/png;base64,PRIVATE_DATA_TOKEN',
-    'javascript:PRIVATE_JAVASCRIPT_TOKEN',
-    'blob:https://example.test/PRIVATE_BLOB_TOKEN',
-    'ftp://user:pass@example.test/private?token=PRIVATE_FTP_TOKEN#secret',
+    'data:image/png;base64,SYNTHETIC_DATA_TOKEN',
+    'javascript:SYNTHETIC_JAVASCRIPT_TOKEN',
+    'blob:https://example.test/SYNTHETIC_BLOB_TOKEN',
+    'ftp://user:pass@example.test/private?token=SYNTHETIC_FTP_TOKEN#secret',
   ])('replaces the non-HTTP(S) URL %s with the inline marker', (url) => {
     expect(sanitizeUrl(url)).toBe('<inline>');
   });

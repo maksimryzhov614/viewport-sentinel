@@ -260,7 +260,7 @@ describe('VS003 browser snapshot', () => {
       <img id="data-inline" src="data:image/png;base64,VS003_DATA_SECRET" alt="">
       <img id="javascript-inline" src="javascript:VS003_JAVASCRIPT_SECRET" alt="">
       <img id="blob-inline" src="blob:https://example.test/VS003_BLOB_SECRET" alt="">
-      <img id="descriptor-inline" srcset="data:image/png;base64,VS003_DATA_SECRET PRIVATE_DESCRIPTOR_SECRET" alt="">
+      <img id="descriptor-inline" srcset="data:image/png;base64,VS003_DATA_SECRET SYNTHETIC_DESCRIPTOR_SECRET" alt="">
     `);
     const drafts = evaluateVS003(snapshot);
 
@@ -294,7 +294,7 @@ describe('VS003 browser snapshot', () => {
     ]);
     expect(drafts).toHaveLength(4);
     expect(JSON.stringify(drafts)).not.toMatch(
-      /VS003_(?:DATA|JAVASCRIPT|BLOB)_SECRET|PRIVATE_DESCRIPTOR_SECRET|data:image|javascript:|blob:/u,
+      /VS003_(?:DATA|JAVASCRIPT|BLOB)_SECRET|SYNTHETIC_DESCRIPTOR_SECRET|data:image|javascript:|blob:/u,
     );
 
     const auditedUrl = `${baseUrl}/inline-sources`;
@@ -345,7 +345,7 @@ describe('VS003 browser snapshot', () => {
     for (const report of reports) {
       expect(report).toContain('"<inline>"');
       expect(report).not.toMatch(
-        /VS003_(?:DATA|JAVASCRIPT|BLOB)_SECRET|PRIVATE_DESCRIPTOR_SECRET|data:image|javascript:|blob:/u,
+        /VS003_(?:DATA|JAVASCRIPT|BLOB)_SECRET|SYNTHETIC_DESCRIPTOR_SECRET|data:image|javascript:|blob:/u,
       );
     }
   });
