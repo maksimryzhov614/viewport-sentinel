@@ -469,7 +469,7 @@ describe('composite Action metadata', () => {
       {
         name: 'Upload reports',
         if: "${{ always() && steps.audit.outputs.output-dir != '' }}",
-        uses: 'actions/upload-artifact@v5',
+        uses: 'actions/upload-artifact@v7',
         with: {
           name: 'viewport-sentinel-${{ github.run_id }}-${{ github.run_attempt }}',
           path: '${{ steps.audit.outputs.output-dir }}',

@@ -173,7 +173,7 @@ describe('CI workflow', () => {
       { run: 'npm run generated:check' },
       {
         if: '${{ failure() }}',
-        uses: 'actions/upload-artifact@v5',
+        uses: 'actions/upload-artifact@v7',
         with: {
           name: 'test-artifacts',
           path: 'artifacts/',
