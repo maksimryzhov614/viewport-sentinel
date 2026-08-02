@@ -37,10 +37,8 @@ jobs:
         run: npm run verify:determinism -- 20
       - name: Verify performance
         run: npm run verify:performance
-      - name: Publish first release with provenance
+      - name: Publish release with trusted publishing
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_INITIAL_PUBLISH_TOKEN }}
       - name: Create GitHub release from changelog
         run: gh release create "$GITHUB_REF_NAME" --title "Viewport Sentinel $GITHUB_REF_NAME" --notes-file CHANGELOG.md
         env:

@@ -104,7 +104,7 @@ describe('dormant publication workflows', () => {
     },
   };
 
-  it('keeps first-publish auth on only the provenance publish step', async () => {
+  it('uses OIDC trusted publishing without token auth', async () => {
     const release = await workflow('release.yml');
     expect(release.on).toEqual({
       push: { tags: ['v[0-9]*.[0-9]*.[0-9]*'] },
@@ -127,7 +127,7 @@ describe('dormant publication workflows', () => {
       'Verify release candidate',
       'Verify 20-run determinism',
       'Verify performance',
-      'Publish first release with provenance',
+      'Publish release with trusted publishing',
       'Create GitHub release from changelog',
     ]);
     const setup = releaseSteps[1];
@@ -149,15 +149,11 @@ describe('dormant publication workflows', () => {
     );
     const publish = releaseSteps[8];
     expect(publish).toEqual({
-      name: 'Publish first release with provenance',
+      name: 'Publish release with trusted publishing',
       run: 'npm publish --provenance --access public',
-      env: { NODE_AUTH_TOKEN: '${{ secrets.NPM_INITIAL_PUBLISH_TOKEN }}' },
     });
-    expect(
-      releaseSteps.filter((step) =>
-        JSON.stringify(step).includes('NPM_INITIAL_PUBLISH_TOKEN'),
-      ),
-    ).toEqual([publish]);
+    expect(JSON.stringify(release)).not.toContain('NODE_AUTH_TOKEN');
+    expect(JSON.stringify(release)).not.toContain('NPM_INITIAL_PUBLISH_TOKEN');
 
     const assertionScript = assertion?.run;
     if (typeof assertionScript !== 'string') {
