@@ -198,6 +198,7 @@ describe('GitHub reporter', () => {
 
     const summary = await readFile(githubEnv.summaryPath, 'utf8');
     expect(summary).toContain('Total findings: 53');
+    expect(summary).toContain('Combinations: 4/4');
     expect(summary).toContain('Suppressed console messages: 7');
     expect(summary).toContain('Omitted findings: 5');
     expect(summary).toContain('3 additional findings');

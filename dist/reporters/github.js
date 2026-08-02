@@ -42,6 +42,7 @@ function summaryHtml(result) {
         '<h1>Viewport Sentinel</h1>',
         '<p>',
         `Total findings: ${String(result.totals.findingCount)}<br>`,
+        `Combinations: ${String(result.combinations.completed)}/${String(result.combinations.total)}<br>`,
         `Suppressed console messages: ${String(result.totals.suppressedConsoleCount)}<br>`,
         `Omitted findings: ${String(result.totals.omittedFindingCount)}`,
         '</p>',
