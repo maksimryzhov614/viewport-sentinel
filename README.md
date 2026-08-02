@@ -117,7 +117,7 @@ jobs:
           done
           cat /tmp/app.log
           exit 1
-      - uses: maksimryzhov614/viewport-sentinel@v1
+      - uses: maksimryzhov614/viewport-sentinel@v0.1.0
         with:
           config: viewport-sentinel.config.json
           output: artifacts/viewport-sentinel

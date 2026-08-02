@@ -192,7 +192,7 @@ describe('dormant publication workflows', () => {
     );
   });
 
-  it('keeps the remote v1 consumer manual and clean', async () => {
+  it('keeps the immutable release consumer manual and clean', async () => {
     const consumer = await workflow('consumer.yml');
     expect(consumer.on).toEqual({ workflow_dispatch: nonceDispatch });
     expect(consumer['run-name']).toBe(
@@ -200,13 +200,22 @@ describe('dormant publication workflows', () => {
     );
     expect(consumer.permissions).toEqual({ contents: 'read' });
     const consumerSteps = steps(object(consumer.jobs).consumer);
+    expect(consumerSteps.slice(0, 2)).toEqual([
+      { uses: 'actions/checkout@v6' },
+      {
+        uses: 'actions/setup-node@v6',
+        with: { 'node-version': '24' },
+      },
+    ]);
     expect(consumerSteps.at(-1)).toEqual({
-      name: 'Consume viewport-sentinel@v1',
-      uses: 'maksimryzhov614/viewport-sentinel@v1',
+      name: 'Consume viewport-sentinel@v0.1.0',
+      uses: 'maksimryzhov614/viewport-sentinel@v0.1.0',
       with: {
         config: 'tests/fixtures/config/clean.json',
         output: 'artifacts/consumer',
       },
     });
+    expect(JSON.stringify(consumer)).not.toContain('@v1');
+    expect(consumerSteps.some((step) => step.uses === './')).toBe(false);
   });
 });

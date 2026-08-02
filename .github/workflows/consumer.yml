@@ -17,6 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
       - name: Start fixture and wait for readiness
         run: |
           npm ci
@@ -27,8 +30,8 @@ jobs:
           done
           cat /tmp/viewport-sentinel-fixture.log
           exit 1
-      - name: Consume viewport-sentinel@v1
-        uses: maksimryzhov614/viewport-sentinel@v1
+      - name: Consume viewport-sentinel@v0.1.0
+        uses: maksimryzhov614/viewport-sentinel@v0.1.0
         with:
           config: tests/fixtures/config/clean.json
           output: artifacts/consumer
