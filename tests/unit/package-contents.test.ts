@@ -76,7 +76,7 @@ describe('published package contents', () => {
         join(temporaryDirectory, 'package/dist/cli.js'),
         ['--version'],
       );
-      expect(version).toBe('0.1.0\n');
+      expect(version).toBe('0.1.1\n');
     } finally {
       await rm(temporaryDirectory, { recursive: true, force: true });
     }

@@ -162,7 +162,7 @@ describe('dormant publication workflows', () => {
     await expect(
       execFileAsync('bash', ['-euo', 'pipefail', '-c', assertionScript], {
         cwd: resolve('.'),
-        env: { ...process.env, GITHUB_REF_NAME: 'v0.1.0' },
+        env: { ...process.env, GITHUB_REF_NAME: 'v0.1.1' },
       }),
     ).resolves.toMatchObject({ stderr: '' });
     await expect(
@@ -208,8 +208,8 @@ describe('dormant publication workflows', () => {
       },
     ]);
     expect(consumerSteps.at(-1)).toEqual({
-      name: 'Consume viewport-sentinel@v0.1.0',
-      uses: 'maksimryzhov614/viewport-sentinel@v0.1.0',
+      name: 'Consume viewport-sentinel@v0.1.1',
+      uses: 'maksimryzhov614/viewport-sentinel@v0.1.1',
       with: {
         config: 'tests/fixtures/config/clean.json',
         output: 'artifacts/consumer',

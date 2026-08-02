@@ -240,7 +240,7 @@ describe('built CLI process', () => {
 
     expect(compiled.startsWith('#!/usr/bin/env node\n')).toBe(true);
     const result = await spawnCli(['--version']);
-    expect(result).toEqual({ code: 0, stdout: '0.1.0\n', stderr: '' });
+    expect(result).toEqual({ code: 0, stdout: '0.1.1\n', stderr: '' });
   });
 
   it('prints exact help without requiring a config or launching Chromium', async () => {
@@ -461,7 +461,7 @@ describe('runCli service', () => {
 
   it.each([
     [['--help'], 'Usage: viewport-sentinel [options]\n', 0],
-    [['--version'], '0.1.0\n', 0],
+    [['--version'], '0.1.1\n', 0],
   ] as const)(
     'handles %j through injected sinks without loading config',
     async (argv, prefix, exitCode) => {

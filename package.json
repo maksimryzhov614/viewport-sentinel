@@ -1,6 +1,6 @@
 {
   "name": "viewport-sentinel",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Deterministic responsive and media regression checks in Chromium CI.",
   "repository": {
     "type": "git",

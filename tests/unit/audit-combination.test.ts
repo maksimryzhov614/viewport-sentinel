@@ -585,7 +585,7 @@ describe('auditConfig', () => {
 
     expect(result.tool).toEqual({
       name: 'viewport-sentinel',
-      version: '0.1.0',
+      version: '0.1.1',
     });
     expect(result.browser).toEqual({
       name: 'chromium',

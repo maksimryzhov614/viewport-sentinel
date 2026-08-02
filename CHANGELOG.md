@@ -2,6 +2,13 @@
 
 All notable implemented changes are documented here.
 
+## 0.1.1 - 2026-08-02
+
+### Fixed
+
+- Corrected the npm-rendered README and published GitHub Action example to use
+  the immutable `v0.1.1` reference instead of the unavailable floating `v1`.
+
 ## 0.1.0 - 2026-08-01
 
 ### Added

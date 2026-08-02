@@ -60,7 +60,7 @@ afterEach(async () => {
 });
 
 describe('README quick start', () => {
-  it('installs the actual v0.1.0 tarball and produces the documented clean result', async () => {
+  it('installs the actual v0.1.1 tarball and produces the documented clean result', async () => {
     const readme = await readFile(join(repositoryRoot, 'README.md'), 'utf8');
     const configMatch =
       /<!-- quick-start-config -->\s*```json\s*([\s\S]*?)\s*```/u.exec(readme);
@@ -74,7 +74,10 @@ describe('README quick start', () => {
     if (configSource === undefined) {
       throw new Error('README quick-start config is missing');
     }
-    const documentedConfig = JSON.parse(configSource) as unknown;
+    const documentedConfig = JSON.parse(configSource) as Record<
+      string,
+      unknown
+    >;
     expect(documentedConfig).toMatchObject({
       version: 1,
       baseUrl: 'http://127.0.0.1:4173',
@@ -91,7 +94,7 @@ describe('README quick start', () => {
     if (packResult === undefined) {
       throw new Error('npm pack returned no artifact');
     }
-    expect(basename(packResult.filename)).toBe('viewport-sentinel-0.1.0.tgz');
+    expect(basename(packResult.filename)).toBe('viewport-sentinel-0.1.1.tgz');
 
     await writeFile(
       join(root, 'package.json'),
@@ -110,15 +113,14 @@ describe('README quick start', () => {
       root,
     );
     expect(install).toMatchObject({ code: 0, stderr: '' });
-    await writeFile(
-      join(root, 'viewport-sentinel.config.json'),
-      configSource,
-      'utf8',
-    );
-
     let fixture: FixtureServer | undefined;
     try {
-      fixture = await startFixtureServer(4173);
+      fixture = await startFixtureServer(0);
+      await writeFile(
+        join(root, 'viewport-sentinel.config.json'),
+        JSON.stringify({ ...documentedConfig, baseUrl: fixture.url }),
+        'utf8',
+      );
       const audit = await run(
         'npx',
         ['viewport-sentinel', '--config', 'viewport-sentinel.config.json'],
