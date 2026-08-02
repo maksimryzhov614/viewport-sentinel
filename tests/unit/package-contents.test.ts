@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
-import { isAbsolute, resolve } from 'node:path';
+import { mkdtemp, readFile, rm, symlink } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { basename, isAbsolute, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
 import { describe, expect, it } from 'vitest';
 
@@ -43,6 +44,44 @@ function isAbsoluteSourcePath(value: string): boolean {
 }
 
 describe('published package contents', () => {
+  it('ships an executable CLI entry point', async () => {
+    const temporaryDirectory = await mkdtemp(
+      join(tmpdir(), 'viewport-sentinel-package-'),
+    );
+
+    try {
+      const { stdout } = await execFileAsync(
+        'npm',
+        ['pack', '--json', '--pack-destination', temporaryDirectory],
+        { cwd: repositoryRoot, maxBuffer: 10 * 1024 * 1024 },
+      );
+      const result = (JSON.parse(stdout) as { filename: string }[])[0];
+      if (result === undefined) {
+        throw new Error('npm pack returned no package');
+      }
+      const archivePath = join(temporaryDirectory, basename(result.filename));
+      await execFileAsync('tar', [
+        '-xzf',
+        archivePath,
+        '-C',
+        temporaryDirectory,
+      ]);
+      await symlink(
+        join(repositoryRoot, 'node_modules'),
+        join(temporaryDirectory, 'package/node_modules'),
+        'dir',
+      );
+
+      const { stdout: version } = await execFileAsync(
+        join(temporaryDirectory, 'package/dist/cli.js'),
+        ['--version'],
+      );
+      expect(version).toBe('0.1.0\n');
+    } finally {
+      await rm(temporaryDirectory, { recursive: true, force: true });
+    }
+  }, 60_000);
+
   it('ships only the release allowlist with runnable CLI and Action artifacts', async () => {
     const { stdout } = await execFileAsync(
       'npm',
