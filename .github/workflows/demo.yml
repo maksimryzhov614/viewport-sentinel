@@ -1,7 +1,13 @@
 name: Verified demo
+run-name: Verified demo [${{ inputs.nonce }}]
 
 on:
   workflow_dispatch:
+    inputs:
+      nonce:
+        description: Unique dispatch nonce
+        required: true
+        type: string
 
 permissions:
   contents: read

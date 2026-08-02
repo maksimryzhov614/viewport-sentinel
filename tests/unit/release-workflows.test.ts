@@ -94,6 +94,16 @@ function steps(job: unknown): Record<string, unknown>[] {
 }
 
 describe('dormant publication workflows', () => {
+  const nonceDispatch = {
+    inputs: {
+      nonce: {
+        description: 'Unique dispatch nonce',
+        required: 'true',
+        type: 'string',
+      },
+    },
+  };
+
   it('keeps first-publish auth on only the provenance publish step', async () => {
     const release = await workflow('release.yml');
     expect(release.on).toEqual({
@@ -169,7 +179,8 @@ describe('dormant publication workflows', () => {
 
   it('keeps the demo manual, preserves Action reports, and fails last on findings', async () => {
     const demo = await workflow('demo.yml');
-    expect(demo.on).toEqual({ workflow_dispatch: null });
+    expect(demo.on).toEqual({ workflow_dispatch: nonceDispatch });
+    expect(demo['run-name']).toBe('Verified demo [${{ inputs.nonce }}]');
     expect(demo.permissions).toEqual({ contents: 'read' });
     const demoSteps = steps(object(demo.jobs).demo);
     expect(demoSteps.at(-1)).toEqual({
@@ -187,7 +198,10 @@ describe('dormant publication workflows', () => {
 
   it('keeps the remote v1 consumer manual and clean', async () => {
     const consumer = await workflow('consumer.yml');
-    expect(consumer.on).toEqual({ workflow_dispatch: null });
+    expect(consumer.on).toEqual({ workflow_dispatch: nonceDispatch });
+    expect(consumer['run-name']).toBe(
+      'Published Action consumer [${{ inputs.nonce }}]',
+    );
     expect(consumer.permissions).toEqual({ contents: 'read' });
     const consumerSteps = steps(object(consumer.jobs).consumer);
     expect(consumerSteps.at(-1)).toEqual({

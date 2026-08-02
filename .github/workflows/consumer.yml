@@ -1,7 +1,13 @@
 name: Published Action consumer
+run-name: Published Action consumer [${{ inputs.nonce }}]
 
 on:
   workflow_dispatch:
+    inputs:
+      nonce:
+        description: Unique dispatch nonce
+        required: true
+        type: string
 
 permissions:
   contents: read
