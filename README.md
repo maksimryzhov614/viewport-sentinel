@@ -11,8 +11,13 @@ Viewport Sentinel is a focused CLI and GitHub Action. It audits an explicit
 page × viewport matrix and produces deterministic JSON and SARIF reports.
 It is not a crawler, Lighthouse replacement, or pixel-diff service.
 
-The short verified demo will be added after the first public release. No demo
-media is included in this local release candidate.
+## Verified demo
+
+[![Viewport Sentinel verified demo](docs/assets/demo.gif)](https://github.com/maksimryzhov614/viewport-sentinel/actions/runs/30747735855)
+
+The seeded public workflow reports 6 findings across all 10 configured
+page × viewport combinations. It writes the job summary, JSON, SARIF, and the
+downloadable artifact before intentionally propagating the audit failure.
 
 ## Quick start
 
