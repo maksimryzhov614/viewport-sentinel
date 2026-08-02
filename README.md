@@ -11,13 +11,19 @@ Viewport Sentinel is a focused CLI and GitHub Action. It audits an explicit
 page × viewport matrix and produces deterministic JSON and SARIF reports.
 It is not a crawler, Lighthouse replacement, or pixel-diff service.
 
-## Verified demo
+## Detection demo — intentionally broken fixture
 
-[![Viewport Sentinel verified demo](docs/assets/demo.gif)](https://github.com/maksimryzhov614/viewport-sentinel/actions/runs/30747735855)
+> [!IMPORTANT]
+> **Expected findings, not project errors.** The demo target contains six
+> intentionally broken cases. Viewport Sentinel detects them, writes the job
+> summary, JSON, SARIF, and artifact, then exits `1` by design. Project CI is
+> passing.
 
-The seeded public workflow reports 6 findings across all 10 configured
-page × viewport combinations. It writes the job summary, JSON, SARIF, and the
-downloadable artifact before intentionally propagating the audit failure.
+[![Viewport Sentinel expected-findings demo](docs/assets/demo.gif)](https://github.com/maksimryzhov614/viewport-sentinel/actions/runs/30747735855)
+
+The seeded public workflow completes all 10 configured page × viewport
+combinations and reports the six planted defects. Its final failure is the
+tested fail-last contract: evidence is saved before the audit status propagates.
 
 ## Quick start
 
