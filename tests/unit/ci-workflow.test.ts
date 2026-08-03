@@ -53,6 +53,9 @@ function yamlValue(node: YamlNode): unknown {
     case 'sequence':
       return (node.children ?? []).map((child) => yamlValue(child));
     case 'plain':
+      if (node.value === 'true') return true;
+      if (node.value === 'false') return false;
+      return node.value;
     case 'quoteDouble':
     case 'quoteSingle':
     case 'blockLiteral':
@@ -62,8 +65,10 @@ function yamlValue(node: YamlNode): unknown {
   }
 }
 
-async function parseWorkflow(): Promise<Record<string, unknown>> {
-  const path = resolve('.github/workflows/ci.yml');
+async function parseWorkflow(
+  relativePath: string,
+): Promise<Record<string, unknown>> {
+  const path = resolve(relativePath);
   const parsed = (await yamlParsers.yaml.parse(await readFile(path, 'utf8'), {
     filepath: path,
   } as never)) as YamlNode;
@@ -123,7 +128,7 @@ function containsKey(value: unknown, key: string): boolean {
 
 describe('CI workflow', () => {
   it('parses into the exact least-privilege trigger and local self-consumer gate', async () => {
-    const workflow = await parseWorkflow();
+    const workflow = await parseWorkflow('.github/workflows/ci.yml');
 
     expect(workflow.on).toEqual({
       pull_request: null,
@@ -217,5 +222,68 @@ describe('CI workflow', () => {
     expect(scripts.verify).toBe(
       'npm run format:check && npm run lint && npm run typecheck && npm test && npm run build && npm pack --dry-run && npm run generated:check',
     );
+
+    const demoWorkflow = await parseWorkflow('.github/workflows/demo.yml');
+    expect(demoWorkflow.on).toEqual({
+      workflow_dispatch: {
+        inputs: {
+          nonce: {
+            description: 'Unique dispatch nonce',
+            required: true,
+            type: 'string',
+          },
+        },
+      },
+    });
+    expect(demoWorkflow['run-name']).toBe(
+      'Verified demo [${{ inputs.nonce }}]',
+    );
+
+    const demo = object(object(demoWorkflow.jobs).demo);
+    const demoSteps = steps(demo);
+    const proofSteps = demoSteps.slice(-3);
+    expect(proofSteps[0]).toEqual({
+      id: 'audit',
+      name: 'Run seeded expected-findings audit',
+      'continue-on-error': true,
+      uses: './',
+      with: {
+        config: 'tests/fixtures/config/golden.json',
+        output: 'artifacts/demo',
+      },
+    });
+    expect(proofSteps[1]).toEqual({
+      name: 'Upload proof reports',
+      if: '${{ always() }}',
+      uses: 'actions/upload-artifact@v7',
+      with: {
+        name: 'viewport-sentinel-demo-proof-${{ github.run_id }}-${{ github.run_attempt }}',
+        path: 'artifacts/demo',
+        'if-no-files-found': 'error',
+      },
+    });
+
+    const assertion = proofSteps[2];
+    expect(assertion).toMatchObject({
+      name: 'Assert expected findings',
+      if: '${{ always() }}',
+      env: {
+        AUDIT_OUTCOME: '${{ steps.audit.outcome }}',
+        FINDING_COUNT: '${{ steps.audit.outputs.finding-count }}',
+        REPORT_JSON: '${{ steps.audit.outputs.report-json }}',
+        REPORT_SARIF: '${{ steps.audit.outputs.report-sarif }}',
+      },
+    });
+    const assertionRun = object(assertion).run;
+    expect(assertionRun).toEqual(expect.any(String));
+    expect(assertionRun).toContain('test "$AUDIT_OUTCOME" = "failure"');
+    expect(assertionRun).toContain('test "$FINDING_COUNT" = "6"');
+    expect(assertionRun).toContain('json.tool?.version !== "0.1.1"');
+    expect(assertionRun).toContain('json.complete !== true');
+    expect(assertionRun).toContain('json.combinations?.completed !== 10');
+    expect(assertionRun).toContain('json.combinations?.total !== 10');
+    expect(assertionRun).toContain('json.totals?.findingCount !== 6');
+    expect(assertionRun).toContain('sarif.version !== "2.1.0"');
+    expect(assertionRun).toContain('sarif.runs?.[0]?.results?.length !== 6');
   });
 });
