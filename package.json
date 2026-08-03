@@ -2,6 +2,14 @@
   "name": "viewport-sentinel",
   "version": "0.1.1",
   "description": "Deterministic responsive and media regression checks in Chromium CI.",
+  "keywords": [
+    "responsive-testing",
+    "playwright",
+    "github-action",
+    "sarif",
+    "visual-regression",
+    "developer-tools"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/maksimryzhov614/viewport-sentinel.git"

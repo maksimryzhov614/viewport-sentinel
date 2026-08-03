@@ -1,3 +1,4 @@
 .superpowers/
 config.schema.json
 tests/golden/
+docs/proof/results.json

@@ -1,0 +1,345 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "runs": [
+    {
+      "automationDetails": {
+        "id": "viewport-sentinel/v1"
+      },
+      "properties": {
+        "complete": true,
+        "configFile": "golden.json"
+      },
+      "results": [
+        {
+          "level": "error",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "http://127.0.0.1:4173/overflow"
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Document is 160px wider than the viewport"
+          },
+          "partialFingerprints": {
+            "primaryLocationLineHash": "7188187c9d6b72cc03076282ba40ad7343c9a3c06024dea493d28e538d7ac55c"
+          },
+          "properties": {
+            "evidence": {
+              "documentWidth": 480,
+              "kind": "overflow",
+              "offenders": [
+                {
+                  "rect": {
+                    "bottom": 40,
+                    "height": 40,
+                    "left": 0,
+                    "right": 480,
+                    "top": 0,
+                    "width": 480,
+                    "x": 0,
+                    "y": 0
+                  },
+                  "selector": "#overflow-offender"
+                }
+              ],
+              "overflowPx": 160,
+              "viewportWidth": 320
+            },
+            "page": "overflow",
+            "selector": "html",
+            "viewport": {
+              "deviceScaleFactor": 1,
+              "height": 844,
+              "name": "mobile-320",
+              "width": 320
+            }
+          },
+          "ruleId": "VS001"
+        },
+        {
+          "level": "error",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "http://127.0.0.1:4173/overlap"
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Fixed/sticky element #mobile-cover covers actionable #checkout"
+          },
+          "partialFingerprints": {
+            "primaryLocationLineHash": "b3ecfb1cac5c068946072561604f32f63914d66c9d1629170651db9f35b9d45c"
+          },
+          "properties": {
+            "evidence": {
+              "centerCovered": false,
+              "coverRect": {
+                "bottom": 340,
+                "height": 18,
+                "left": 60,
+                "right": 260,
+                "top": 322,
+                "width": 200,
+                "x": 60,
+                "y": 322
+              },
+              "coverSelector": "#mobile-cover",
+              "kind": "overlap",
+              "overlapRatio": 0.45,
+              "targetRect": {
+                "bottom": 340,
+                "height": 40,
+                "left": 60,
+                "right": 260,
+                "top": 300,
+                "width": 200,
+                "x": 60,
+                "y": 300
+              },
+              "targetSelector": "#checkout"
+            },
+            "page": "overlap",
+            "selector": "#checkout",
+            "viewport": {
+              "deviceScaleFactor": 1,
+              "height": 844,
+              "name": "mobile-320",
+              "width": 320
+            }
+          },
+          "ruleId": "VS002"
+        },
+        {
+          "level": "error",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "http://127.0.0.1:4173/picture"
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Browser-selected image did not load and decode"
+          },
+          "partialFingerprints": {
+            "primaryLocationLineHash": "f35a95f2660001391c8220ffd8596505625a72716a98b41eb9c0fbf0501a7917"
+          },
+          "properties": {
+            "evidence": {
+              "complete": true,
+              "currentSrc": "http://127.0.0.1:4173/assets/missing.webp",
+              "decode": "rejected",
+              "kind": "image",
+              "naturalHeight": 0,
+              "naturalWidth": 0,
+              "selector": "#product-image",
+              "sourceCandidates": [
+                "http://127.0.0.1:4173/assets/missing.webp",
+                "http://127.0.0.1:4173/assets/valid.svg"
+              ]
+            },
+            "page": "picture",
+            "selector": "#product-image",
+            "viewport": {
+              "deviceScaleFactor": 1,
+              "height": 844,
+              "name": "mobile-320",
+              "width": 320
+            }
+          },
+          "ruleId": "VS003"
+        },
+        {
+          "level": "error",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "http://127.0.0.1:4173/picture"
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "Browser-selected image did not load and decode"
+          },
+          "partialFingerprints": {
+            "primaryLocationLineHash": "b777d7340c21a35d4369692a3bedd05220c59daa1be864aabc5e9213a6279feb"
+          },
+          "properties": {
+            "evidence": {
+              "complete": true,
+              "currentSrc": "http://127.0.0.1:4173/assets/missing.webp",
+              "decode": "rejected",
+              "kind": "image",
+              "naturalHeight": 0,
+              "naturalWidth": 0,
+              "selector": "#product-image",
+              "sourceCandidates": [
+                "http://127.0.0.1:4173/assets/missing.webp",
+                "http://127.0.0.1:4173/assets/valid.svg"
+              ]
+            },
+            "page": "picture",
+            "selector": "#product-image",
+            "viewport": {
+              "deviceScaleFactor": 1,
+              "height": 900,
+              "name": "desktop-1440",
+              "width": 1440
+            }
+          },
+          "ruleId": "VS003"
+        },
+        {
+          "level": "error",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "http://127.0.0.1:4173/console"
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "viewport-sentinel fixture error"
+          },
+          "partialFingerprints": {
+            "primaryLocationLineHash": "8d584ca08eab9de6e05e4ac58cbf339cbd9eb16b81e169c174ea5d567c93790f"
+          },
+          "properties": {
+            "evidence": {
+              "column": 14,
+              "eventType": "console.error",
+              "kind": "console",
+              "line": 16,
+              "message": "viewport-sentinel fixture error",
+              "sourceUrl": "http://127.0.0.1:4173/console"
+            },
+            "page": "console",
+            "selector": "document",
+            "viewport": {
+              "deviceScaleFactor": 1,
+              "height": 844,
+              "name": "mobile-320",
+              "width": 320
+            }
+          },
+          "ruleId": "VS004"
+        },
+        {
+          "level": "error",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "http://127.0.0.1:4173/console"
+                }
+              }
+            }
+          ],
+          "message": {
+            "text": "viewport-sentinel fixture error"
+          },
+          "partialFingerprints": {
+            "primaryLocationLineHash": "9ded40913f1de8eed7fe9efc539fe0f94385bd428c91280107a7600c5177c2a9"
+          },
+          "properties": {
+            "evidence": {
+              "column": 14,
+              "eventType": "console.error",
+              "kind": "console",
+              "line": 16,
+              "message": "viewport-sentinel fixture error",
+              "sourceUrl": "http://127.0.0.1:4173/console"
+            },
+            "page": "console",
+            "selector": "document",
+            "viewport": {
+              "deviceScaleFactor": 1,
+              "height": 900,
+              "name": "desktop-1440",
+              "width": 1440
+            }
+          },
+          "ruleId": "VS004"
+        }
+      ],
+      "tool": {
+        "driver": {
+          "informationUri": "https://github.com/maksimryzhov614/viewport-sentinel",
+          "name": "viewport-sentinel",
+          "rules": [
+            {
+              "fullDescription": {
+                "text": "The page did not navigate or become ready before the configured deadline."
+              },
+              "helpUri": "https://github.com/maksimryzhov614/viewport-sentinel/blob/main/docs/rules.md#vsrun001",
+              "id": "VSRUN001",
+              "name": "PageReadinessFailure",
+              "shortDescription": {
+                "text": "Page readiness failure"
+              }
+            },
+            {
+              "fullDescription": {
+                "text": "The document is wider than the configured viewport."
+              },
+              "helpUri": "https://github.com/maksimryzhov614/viewport-sentinel/blob/main/docs/rules.md#vs001",
+              "id": "VS001",
+              "name": "HorizontalOverflow",
+              "shortDescription": {
+                "text": "Horizontal overflow"
+              }
+            },
+            {
+              "fullDescription": {
+                "text": "A fixed or sticky element obscures an actionable control."
+              },
+              "helpUri": "https://github.com/maksimryzhov614/viewport-sentinel/blob/main/docs/rules.md#vs002",
+              "id": "VS002",
+              "name": "BlockedActionableControl",
+              "shortDescription": {
+                "text": "Blocked actionable control"
+              }
+            },
+            {
+              "fullDescription": {
+                "text": "A visible browser-selected image did not load and decode."
+              },
+              "helpUri": "https://github.com/maksimryzhov614/viewport-sentinel/blob/main/docs/rules.md#vs003",
+              "id": "VS003",
+              "name": "BrowserSelectedImageFailure",
+              "shortDescription": {
+                "text": "Browser-selected image failure"
+              }
+            },
+            {
+              "fullDescription": {
+                "text": "The page emitted an unignored console error or page error."
+              },
+              "helpUri": "https://github.com/maksimryzhov614/viewport-sentinel/blob/main/docs/rules.md#vs004",
+              "id": "VS004",
+              "name": "BrowserRuntimeError",
+              "shortDescription": {
+                "text": "Browser runtime error"
+              }
+            }
+          ],
+          "version": "0.1.1"
+        }
+      }
+    }
+  ],
+  "version": "2.1.0"
+}

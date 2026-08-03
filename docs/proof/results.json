@@ -1,0 +1,260 @@
+{
+  "browser": {
+    "name": "chromium",
+    "playwrightVersion": "1.62.1",
+    "version": "151.0.7922.34"
+  },
+  "combinations": {
+    "completed": 10,
+    "failedReadiness": 0,
+    "total": 10
+  },
+  "complete": true,
+  "config": {
+    "formats": [
+      "json",
+      "sarif"
+    ],
+    "pages": [
+      {
+        "consoleIgnoreCount": 0,
+        "hasReadySelector": false,
+        "name": "clean",
+        "url": "http://127.0.0.1:4173/clean"
+      },
+      {
+        "consoleIgnoreCount": 0,
+        "hasReadySelector": false,
+        "name": "overflow",
+        "url": "http://127.0.0.1:4173/overflow"
+      },
+      {
+        "consoleIgnoreCount": 0,
+        "hasReadySelector": false,
+        "name": "overlap",
+        "url": "http://127.0.0.1:4173/overlap"
+      },
+      {
+        "consoleIgnoreCount": 0,
+        "hasReadySelector": false,
+        "name": "picture",
+        "url": "http://127.0.0.1:4173/picture"
+      },
+      {
+        "consoleIgnoreCount": 0,
+        "hasReadySelector": false,
+        "name": "console",
+        "url": "http://127.0.0.1:4173/console"
+      }
+    ],
+    "timeoutMs": 10000,
+    "version": 1,
+    "viewports": [
+      {
+        "deviceScaleFactor": 1,
+        "height": 844,
+        "name": "mobile-320",
+        "width": 320
+      },
+      {
+        "deviceScaleFactor": 1,
+        "height": 900,
+        "name": "desktop-1440",
+        "width": 1440
+      }
+    ]
+  },
+  "findings": [
+    {
+      "evidence": {
+        "documentWidth": 480,
+        "kind": "overflow",
+        "offenders": [
+          {
+            "rect": {
+              "bottom": 40,
+              "height": 40,
+              "left": 0,
+              "right": 480,
+              "top": 0,
+              "width": 480,
+              "x": 0,
+              "y": 0
+            },
+            "selector": "#overflow-offender"
+          }
+        ],
+        "overflowPx": 160,
+        "viewportWidth": 320
+      },
+      "fingerprint": "sha256:7188187c9d6b72cc03076282ba40ad7343c9a3c06024dea493d28e538d7ac55c",
+      "message": "Document is 160px wider than the viewport",
+      "page": "overflow",
+      "ruleId": "VS001",
+      "selector": "html",
+      "severity": "error",
+      "url": "http://127.0.0.1:4173/overflow",
+      "viewport": {
+        "deviceScaleFactor": 1,
+        "height": 844,
+        "name": "mobile-320",
+        "width": 320
+      }
+    },
+    {
+      "evidence": {
+        "centerCovered": false,
+        "coverRect": {
+          "bottom": 340,
+          "height": 18,
+          "left": 60,
+          "right": 260,
+          "top": 322,
+          "width": 200,
+          "x": 60,
+          "y": 322
+        },
+        "coverSelector": "#mobile-cover",
+        "kind": "overlap",
+        "overlapRatio": 0.45,
+        "targetRect": {
+          "bottom": 340,
+          "height": 40,
+          "left": 60,
+          "right": 260,
+          "top": 300,
+          "width": 200,
+          "x": 60,
+          "y": 300
+        },
+        "targetSelector": "#checkout"
+      },
+      "fingerprint": "sha256:b3ecfb1cac5c068946072561604f32f63914d66c9d1629170651db9f35b9d45c",
+      "message": "Fixed/sticky element #mobile-cover covers actionable #checkout",
+      "page": "overlap",
+      "ruleId": "VS002",
+      "selector": "#checkout",
+      "severity": "error",
+      "url": "http://127.0.0.1:4173/overlap",
+      "viewport": {
+        "deviceScaleFactor": 1,
+        "height": 844,
+        "name": "mobile-320",
+        "width": 320
+      }
+    },
+    {
+      "evidence": {
+        "complete": true,
+        "currentSrc": "http://127.0.0.1:4173/assets/missing.webp",
+        "decode": "rejected",
+        "kind": "image",
+        "naturalHeight": 0,
+        "naturalWidth": 0,
+        "selector": "#product-image",
+        "sourceCandidates": [
+          "http://127.0.0.1:4173/assets/missing.webp",
+          "http://127.0.0.1:4173/assets/valid.svg"
+        ]
+      },
+      "fingerprint": "sha256:f35a95f2660001391c8220ffd8596505625a72716a98b41eb9c0fbf0501a7917",
+      "message": "Browser-selected image did not load and decode",
+      "page": "picture",
+      "ruleId": "VS003",
+      "selector": "#product-image",
+      "severity": "error",
+      "url": "http://127.0.0.1:4173/picture",
+      "viewport": {
+        "deviceScaleFactor": 1,
+        "height": 844,
+        "name": "mobile-320",
+        "width": 320
+      }
+    },
+    {
+      "evidence": {
+        "complete": true,
+        "currentSrc": "http://127.0.0.1:4173/assets/missing.webp",
+        "decode": "rejected",
+        "kind": "image",
+        "naturalHeight": 0,
+        "naturalWidth": 0,
+        "selector": "#product-image",
+        "sourceCandidates": [
+          "http://127.0.0.1:4173/assets/missing.webp",
+          "http://127.0.0.1:4173/assets/valid.svg"
+        ]
+      },
+      "fingerprint": "sha256:b777d7340c21a35d4369692a3bedd05220c59daa1be864aabc5e9213a6279feb",
+      "message": "Browser-selected image did not load and decode",
+      "page": "picture",
+      "ruleId": "VS003",
+      "selector": "#product-image",
+      "severity": "error",
+      "url": "http://127.0.0.1:4173/picture",
+      "viewport": {
+        "deviceScaleFactor": 1,
+        "height": 900,
+        "name": "desktop-1440",
+        "width": 1440
+      }
+    },
+    {
+      "evidence": {
+        "column": 14,
+        "eventType": "console.error",
+        "kind": "console",
+        "line": 16,
+        "message": "viewport-sentinel fixture error",
+        "sourceUrl": "http://127.0.0.1:4173/console"
+      },
+      "fingerprint": "sha256:8d584ca08eab9de6e05e4ac58cbf339cbd9eb16b81e169c174ea5d567c93790f",
+      "message": "viewport-sentinel fixture error",
+      "page": "console",
+      "ruleId": "VS004",
+      "selector": "document",
+      "severity": "error",
+      "url": "http://127.0.0.1:4173/console",
+      "viewport": {
+        "deviceScaleFactor": 1,
+        "height": 844,
+        "name": "mobile-320",
+        "width": 320
+      }
+    },
+    {
+      "evidence": {
+        "column": 14,
+        "eventType": "console.error",
+        "kind": "console",
+        "line": 16,
+        "message": "viewport-sentinel fixture error",
+        "sourceUrl": "http://127.0.0.1:4173/console"
+      },
+      "fingerprint": "sha256:9ded40913f1de8eed7fe9efc539fe0f94385bd428c91280107a7600c5177c2a9",
+      "message": "viewport-sentinel fixture error",
+      "page": "console",
+      "ruleId": "VS004",
+      "selector": "document",
+      "severity": "error",
+      "url": "http://127.0.0.1:4173/console",
+      "viewport": {
+        "deviceScaleFactor": 1,
+        "height": 900,
+        "name": "desktop-1440",
+        "width": 1440
+      }
+    }
+  ],
+  "schemaVersion": 1,
+  "tool": {
+    "name": "viewport-sentinel",
+    "version": "0.1.1"
+  },
+  "totals": {
+    "findingCount": 6,
+    "omittedByCombination": [],
+    "omittedFindingCount": 0,
+    "suppressedConsoleCount": 0
+  }
+}

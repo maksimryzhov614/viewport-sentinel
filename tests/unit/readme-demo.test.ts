@@ -48,5 +48,12 @@ describe('README detection demo', () => {
       /proof workflow.{0,80}\b(?:fails?|failure)\b/u,
     );
     expect(normalizedReadme).not.toContain('## Verified demo');
+    expect(normalizedReadme).toContain('[JSON proof](docs/proof/results.json)');
+    expect(normalizedReadme).toContain(
+      '[SARIF proof](docs/proof/results.sarif)',
+    );
+    expect(normalizedReadme).toContain(
+      'https://github.com/maksimryzhov614/viewport-sentinel/actions/runs/30814151989',
+    );
   });
 });

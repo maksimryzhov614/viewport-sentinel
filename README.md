@@ -25,6 +25,10 @@ The seeded workflow completes all 10 configured page × viewport combinations.
 Its outer assertion accepts the expected audit result only after the reports
 confirm version `0.1.1`, six findings, and a complete matrix.
 
+[JSON proof](docs/proof/results.json)
+· [SARIF proof](docs/proof/results.sarif)
+· [successful proof run](https://github.com/maksimryzhov614/viewport-sentinel/actions/runs/30814151989)
+
 ## Quick start
 
 Viewport Sentinel supports Node.js 22, 24, and 26. Install it in the project

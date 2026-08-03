@@ -44,6 +44,21 @@ function isAbsoluteSourcePath(value: string): boolean {
 }
 
 describe('published package contents', () => {
+  it('uses the reviewed discovery keywords', async () => {
+    const packageJson = JSON.parse(
+      await readFile(join(repositoryRoot, 'package.json'), 'utf8'),
+    ) as { keywords?: unknown };
+
+    expect(packageJson.keywords).toEqual([
+      'responsive-testing',
+      'playwright',
+      'github-action',
+      'sarif',
+      'visual-regression',
+      'developer-tools',
+    ]);
+  });
+
   it('ships an executable CLI entry point', async () => {
     const temporaryDirectory = await mkdtemp(
       join(tmpdir(), 'viewport-sentinel-package-'),
