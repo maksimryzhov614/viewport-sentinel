@@ -19,7 +19,7 @@ It is not a crawler, Lighthouse replacement, or pixel-diff service.
 > and SARIF, and exits `1` as expected. The proof workflow succeeds only after
 > validating all six findings and both reports.
 
-[![Viewport Sentinel expected-findings demo](docs/assets/demo.gif)](https://github.com/maksimryzhov614/viewport-sentinel/actions/workflows/demo.yml)
+[![Viewport Sentinel expected-findings demo](docs/assets/demo.gif)](https://github.com/maksimryzhov614/viewport-sentinel/actions/runs/30814151989)
 
 The seeded workflow completes all 10 configured page × viewport combinations.
 Its outer assertion accepts the expected audit result only after the reports

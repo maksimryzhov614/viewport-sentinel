@@ -16,7 +16,7 @@ describe('README detection demo', () => {
     );
     const warningIndex = normalizedReadme.search(/^>\s*\[!IMPORTANT\]\s*$/mu);
     const linkedImage =
-      /\[!\[[^\]]+\]\(\s*(docs\/assets\/demo\.gif)\s*\)\]\(\s*(https:\/\/github\.com\/maksimryzhov614\/viewport-sentinel\/actions\/workflows\/demo\.yml)\s*\)/u.exec(
+      /\[!\[[^\]]+\]\(\s*(docs\/assets\/demo\.gif)\s*\)\]\(\s*(https:\/\/github\.com\/maksimryzhov614\/viewport-sentinel\/actions\/runs\/30814151989)\s*\)/u.exec(
         normalizedReadme,
       );
     const imageIndex = linkedImage?.index ?? -1;
@@ -26,7 +26,7 @@ describe('README detection demo', () => {
     expect(imageIndex).toBeGreaterThan(warningIndex);
     expect(linkedImage?.[1]).toBe('docs/assets/demo.gif');
     expect(linkedImage?.[2]).toBe(
-      'https://github.com/maksimryzhov614/viewport-sentinel/actions/workflows/demo.yml',
+      'https://github.com/maksimryzhov614/viewport-sentinel/actions/runs/30814151989',
     );
 
     const warning = normalizedReadme
