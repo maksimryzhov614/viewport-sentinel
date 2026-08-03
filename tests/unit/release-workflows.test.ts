@@ -173,23 +173,45 @@ describe('dormant publication workflows', () => {
     ).rejects.toMatchObject({ code: 1 });
   });
 
-  it('keeps the demo manual, preserves Action reports, and fails last on findings', async () => {
+  it('keeps the demo manual and succeeds only after validating expected findings', async () => {
     const demo = await workflow('demo.yml');
     expect(demo.on).toEqual({ workflow_dispatch: nonceDispatch });
     expect(demo['run-name']).toBe('Verified demo [${{ inputs.nonce }}]');
     expect(demo.permissions).toEqual({ contents: 'read' });
     const demoSteps = steps(object(demo.jobs).demo);
-    expect(demoSteps.at(-1)).toEqual({
-      name: 'Run seeded failing audit',
+    const [audit, upload, assertion] = demoSteps.slice(-3);
+    expect(audit).toEqual({
+      id: 'audit',
+      name: 'Run seeded expected-findings audit',
+      'continue-on-error': 'true',
       uses: './',
       with: {
         config: 'tests/fixtures/config/golden.json',
         output: 'artifacts/demo',
       },
     });
-    expect(JSON.stringify(demo)).not.toMatch(
-      /continue-on-error|token|secret/iu,
-    );
+    expect(upload).toEqual({
+      name: 'Upload proof reports',
+      if: '${{ always() }}',
+      uses: 'actions/upload-artifact@v7',
+      with: {
+        name: 'viewport-sentinel-demo-proof-${{ github.run_id }}-${{ github.run_attempt }}',
+        path: 'artifacts/demo',
+        'if-no-files-found': 'error',
+      },
+    });
+    expect(assertion).toMatchObject({
+      name: 'Assert expected findings',
+      if: '${{ always() }}',
+      env: {
+        AUDIT_OUTCOME: '${{ steps.audit.outcome }}',
+        FINDING_COUNT: '${{ steps.audit.outputs.finding-count }}',
+        REPORT_JSON: '${{ steps.audit.outputs.report-json }}',
+        REPORT_SARIF: '${{ steps.audit.outputs.report-sarif }}',
+      },
+    });
+    expect(assertion?.run).toContain('json.totals?.findingCount !== 6');
+    expect(JSON.stringify(demo)).not.toMatch(/token|secret/iu);
   });
 
   it('keeps the immutable release consumer manual and clean', async () => {
