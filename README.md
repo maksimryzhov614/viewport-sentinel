@@ -14,16 +14,16 @@ It is not a crawler, Lighthouse replacement, or pixel-diff service.
 ## Detection demo — intentionally broken fixture
 
 > [!IMPORTANT]
-> **Expected findings, not project errors.** The demo target contains six
-> intentionally broken cases. Viewport Sentinel detects them, writes the job
-> summary, JSON, SARIF, and artifact, then exits `1` by design. Project CI is
-> passing.
+> **Expected findings, not project errors.** The intentionally broken demo
+> target contains six planted cases. The inner audit detects them, writes JSON
+> and SARIF, and exits `1` as expected. The proof workflow succeeds only after
+> validating all six findings and both reports.
 
-[![Viewport Sentinel expected-findings demo](docs/assets/demo.gif)](https://github.com/maksimryzhov614/viewport-sentinel/actions/runs/30747735855)
+[![Viewport Sentinel expected-findings demo](docs/assets/demo.gif)](https://github.com/maksimryzhov614/viewport-sentinel/actions/workflows/demo.yml)
 
-The seeded public workflow completes all 10 configured page × viewport
-combinations and reports the six planted defects. Its final failure is the
-tested fail-last contract: evidence is saved before the audit status propagates.
+The seeded workflow completes all 10 configured page × viewport combinations.
+Its outer assertion accepts the expected audit result only after the reports
+confirm version `0.1.1`, six findings, and a complete matrix.
 
 ## Quick start
 

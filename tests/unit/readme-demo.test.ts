@@ -16,7 +16,7 @@ describe('README detection demo', () => {
     );
     const warningIndex = normalizedReadme.search(/^>\s*\[!IMPORTANT\]\s*$/mu);
     const linkedImage =
-      /\[!\[[^\]]+\]\(\s*(docs\/assets\/demo\.gif)\s*\)\]\(\s*(https:\/\/github\.com\/maksimryzhov614\/viewport-sentinel\/actions\/runs\/30747735855)\s*\)/u.exec(
+      /\[!\[[^\]]+\]\(\s*(docs\/assets\/demo\.gif)\s*\)\]\(\s*(https:\/\/github\.com\/maksimryzhov614\/viewport-sentinel\/actions\/workflows\/demo\.yml)\s*\)/u.exec(
         normalizedReadme,
       );
     const imageIndex = linkedImage?.index ?? -1;
@@ -26,7 +26,7 @@ describe('README detection demo', () => {
     expect(imageIndex).toBeGreaterThan(warningIndex);
     expect(linkedImage?.[1]).toBe('docs/assets/demo.gif');
     expect(linkedImage?.[2]).toBe(
-      'https://github.com/maksimryzhov614/viewport-sentinel/actions/runs/30747735855',
+      'https://github.com/maksimryzhov614/viewport-sentinel/actions/workflows/demo.yml',
     );
 
     const warning = normalizedReadme
@@ -38,7 +38,15 @@ describe('README detection demo', () => {
     expect(warning).toMatch(/\bsix\b/u);
     expect(warning).toContain('intentionally broken');
     expect(warning).toMatch(/\b(?:target|fixture|test pages?)\b/u);
-    expect(warning).toContain('project ci is passing');
+    expect(warning).toContain('the proof workflow succeeds');
+
+    const demoSection = normalizedReadme
+      .slice(headingIndex, normalizedReadme.indexOf('## Quick start'))
+      .toLowerCase();
+    expect(demoSection).not.toContain('final failure');
+    expect(demoSection).not.toMatch(
+      /proof workflow.{0,80}\b(?:fails?|failure)\b/u,
+    );
     expect(normalizedReadme).not.toContain('## Verified demo');
   });
 });
